@@ -17,7 +17,13 @@
     "test": "echo 'No tests specified'",
     "lint": "echo 'No linting configured'"
   },
-  "keywords": ["image", "compression", "webp", "sharp", "express"],
+  "keywords": [
+    "image",
+    "compression",
+    "webp",
+    "sharp",
+    "express"
+  ],
   "author": "",
   "license": "MIT",
   "engines": {
@@ -25,6 +31,7 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
+    "archiver": "^7.0.1",
     "axios": "^1.6.7",
     "compression": "^1.7.4",
     "cors": "^2.8.5",

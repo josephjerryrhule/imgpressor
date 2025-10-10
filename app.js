@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
+const archiver = require('archiver');
 
 const app = express();
 const PORT = 3000;
@@ -12,7 +13,7 @@ const PORT = 3000;
 // Multer setup for file uploads
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit per file
+    limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit per file
     fileFilter: (req, file, cb) => {
         if (file.mimetype.startsWith('image/')) {
             cb(null, true);
@@ -78,8 +79,10 @@ async function optimizeImage(buffer, quality = 80) {
 }
 
 // Helper function to save buffer
-function saveBuffer(buffer, prefix = 'optimized', ext = 'webp') {
-    const filename = `${prefix}_${crypto.randomBytes(8).toString('hex')}.${ext}`;
+function saveBuffer(buffer, originalFilename, ext = 'webp') {
+    // Extract name without extension and add new extension
+    const nameWithoutExt = path.parse(originalFilename).name;
+    const filename = `${nameWithoutExt}.${ext}`;
     const filepath = path.join(__dirname, 'public', 'optimized', filename);
     
     fs.writeFileSync(filepath, buffer);
@@ -147,6 +150,23 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
         const totalOriginal = results.reduce((sum, r) => sum + r.originalSize, 0);
         const totalPercentage = ((totalSaved / totalOriginal) * 100).toFixed(2);
         
+        // Create session ID for download all functionality
+        const sessionId = crypto.randomBytes(16).toString('hex');
+        
+        // Store results in temporary file for download all
+        const tempDir = path.join(__dirname, 'temp');
+        if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir);
+        }
+        fs.writeFileSync(path.join(tempDir, `${sessionId}.json`), JSON.stringify(results));
+        
+        // Download all button (only show if more than one image)
+        const downloadAllButton = results.length > 1 ? `
+            <a href="/download-all/${sessionId}" class="bg-purple-500 text-white py-2 px-6 rounded-md hover:bg-purple-600 transition duration-200 inline-block mr-4">
+                Download All as ZIP
+            </a>
+        ` : '';
+        
         const resultHtml = `
             <!DOCTYPE html>
             <html lang="en">
@@ -171,6 +191,7 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
                     </div>
                     
                     <div class="text-center">
+                        ${downloadAllButton}
                         <a href="/" class="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600 transition duration-200 inline-block">
                             Compress More Images
                         </a>
@@ -188,6 +209,62 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
     }
 });
 
+// Download all route
+app.get('/download-all/:sessionId', async (req, res) => {
+    try {
+        const sessionId = req.params.sessionId;
+        const tempFilePath = path.join(__dirname, 'temp', `${sessionId}.json`);
+        
+        // Check if session file exists
+        if (!fs.existsSync(tempFilePath)) {
+            return res.status(404).send('<h1>Session expired or invalid</h1><a href="/">Go back</a>');
+        }
+        
+        // Read results from temp file
+        const results = JSON.parse(fs.readFileSync(tempFilePath, 'utf8'));
+        
+        // Set response headers for ZIP download
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', 'attachment; filename="compressed-images.zip"');
+        
+        // Create ZIP archive
+        const archive = archiver('zip', {
+            zlib: { level: 9 } // Best compression
+        });
+        
+        // Handle archive errors
+        archive.on('error', (err) => {
+            console.error('Archive error:', err);
+            res.status(500).send('Error creating archive');
+        });
+        
+        // Pipe archive to response
+        archive.pipe(res);
+        
+        // Add each optimized image to the archive
+        for (const result of results) {
+            const filePath = path.join(__dirname, 'public', 'optimized', result.optimizedFilename);
+            if (fs.existsSync(filePath)) {
+                archive.file(filePath, { name: result.optimizedFilename });
+            }
+        }
+        
+        // Finalize the archive
+        await archive.finalize();
+        
+        // Clean up temp file after a delay (optional)
+        setTimeout(() => {
+            if (fs.existsSync(tempFilePath)) {
+                fs.unlinkSync(tempFilePath);
+            }
+        }, 60000); // Delete after 1 minute
+        
+    } catch (error) {
+        console.error('Download all error:', error);
+        res.status(500).send(`<h1>Error: ${error.message}</h1><a href="/">Go back</a>`);
+    }
+});
+
 // Helper function to process a single image
 async function processImage(buffer, filename, quality, url = null) {
     const originalSize = buffer.length;
@@ -196,16 +273,16 @@ async function processImage(buffer, filename, quality, url = null) {
     const optimizedBuffer = await optimizeImage(buffer, quality);
     const optimizedSize = optimizedBuffer.length;
     
-    // Save optimized image
-    const optimizedFilename = saveBuffer(optimizedBuffer, 'optimized', 'webp');
+    // Save optimized image with original name but .webp extension
+    const optimizedFilename = saveBuffer(optimizedBuffer, filename, 'webp');
     
     // Save original for preview if from upload
     let originalPreview;
     if (url) {
         originalPreview = url;
     } else {
-        const ext = path.extname(filename) || '.jpg';
-        const originalFilename = saveBuffer(buffer, 'original', ext.slice(1));
+        const ext = path.extname(filename).slice(1) || 'jpg';
+        const originalFilename = saveBuffer(buffer, filename, ext);
         originalPreview = `/optimized/${originalFilename}`;
     }
     
