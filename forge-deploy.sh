@@ -32,8 +32,22 @@ fi
 # Stop existing PM2 process
 pm2 delete imgpressor 2>/dev/null || true
 
-# Start the application with PM2 (use absolute path)
-pm2 start $(pwd)/ecosystem.config.js --env production
+# Wait a moment for cleanup
+sleep 2
+
+# Check if ecosystem.config.js exists
+if [ ! -f "ecosystem.config.js" ]; then
+    echo "❌ ecosystem.config.js not found!"
+    ls -la
+    exit 1
+fi
+
+# Start the application with PM2 
+echo "🚀 Starting PM2 process..."
+NODE_ENV=production pm2 start ecosystem.config.js --env production --name imgpressor
+
+# Wait for app to start
+sleep 3
 
 # Save PM2 configuration
 pm2 save
@@ -42,9 +56,21 @@ pm2 save
 echo "📊 PM2 Status:"
 pm2 status
 
+# Show PM2 logs
+echo "📝 Recent PM2 logs:"
+pm2 logs imgpressor --lines 10 --nostream || echo "No logs yet"
+
+# Test if port 3000 is listening
+echo "🔍 Checking if port 3000 is listening:"
+netstat -tlnp | grep :3000 || echo "❌ Port 3000 not listening"
+
 # Test if app is responding locally
 echo "🔍 Testing local connection:"
-curl -s http://localhost:3000/test || echo "Local test failed"
+curl -s -m 5 http://localhost:3000/test || echo "❌ Local test failed"
+
+# Test process endpoint specifically
+echo "🔍 Testing /process endpoint:"
+curl -s -m 5 -X POST http://localhost:3000/process || echo "❌ /process test failed"
 
 # Reload Nginx (if needed)
 sudo service nginx reload

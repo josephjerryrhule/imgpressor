@@ -23,6 +23,16 @@ const upload = multer({
     }
 });
 
+// Request logging middleware for debugging
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    if (req.url.includes('/process')) {
+        console.log('Process request - Headers:', Object.keys(req.headers));
+        console.log('Content-Type:', req.headers['content-type']);
+    }
+    next();
+});
+
 // Middleware
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
