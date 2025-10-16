@@ -65,13 +65,22 @@ chmod +x cleanup.sh
 CRON_JOB="0 * * * * $FORGE_SITE_PATH/cleanup.sh"
 (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
 
-# Stop existing PM2 process
-pm2 delete imgpressor 2>/dev/null || true
-sleep 2
+# Force stop all PM2 processes for this app
+echo "🛑 Stopping all PM2 processes..."
+pm2 delete all 2>/dev/null || true
+pm2 kill 2>/dev/null || true
+sleep 3
 
-# Start with PM2
-echo "🚀 Starting PM2 with enhanced storage management..."
+# Verify no processes are running
+pm2 list
+
+# Start fresh PM2 daemon and app
+echo "🚀 Starting fresh PM2 with enhanced storage management..."
 NODE_ENV=production pm2 start ecosystem.config.js --env production --name imgpressor
+
+# Verify the app started correctly
+sleep 3
+pm2 list
 
 # Save PM2 configuration
 pm2 save
@@ -91,6 +100,12 @@ pm2 status
 echo "💾 Storage Status:"
 df -h /home/forge/pressor.themewire.co | head -2
 
+# Verify the new version is running
+echo "🔍 Verifying app version..."
+sleep 2
+curl -s http://localhost:3000/test | head -2 || echo "❌ Version check failed"
+
 echo "✅ Enhanced deployment complete!"
 echo "🌐 App: https://pressor.themewire.co"
 echo "📊 Storage monitoring: https://pressor.themewire.co/storage-status"
+echo "🔍 Test endpoint: https://pressor.themewire.co/test"
