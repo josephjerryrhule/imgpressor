@@ -1,5 +1,6 @@
 node_modules/
 public/optimized/*
+!public/optimized/.gitkeep
 logs/
 .env
 *.log

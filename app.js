@@ -140,7 +140,7 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
                     </div>
                 </div>
                 <p class="text-sm text-green-600 font-medium">Saved: ${(result.savedBytes / 1024).toFixed(2)} KB (${result.savedPercentage}%)</p>
-                <a href="/optimized/${result.optimizedFilename}" download class="mt-2 inline-block bg-green-500 text-white text-sm py-1 px-3 rounded hover:bg-green-600 transition duration-200">
+                <a href="/optimized/${result.optimizedFilename}" download class="mt-2 inline-block btn-success text-sm py-1 px-3">
                     Download
                 </a>
             </div>
@@ -162,7 +162,7 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
         
         // Download all button (only show if more than one image)
         const downloadAllButton = results.length > 1 ? `
-            <a href="/download-all/${sessionId}" class="bg-purple-500 text-white py-2 px-6 rounded-md hover:bg-purple-600 transition duration-200 inline-block mr-4">
+                                    <a href="/download-all/${sessionId}" class="btn-purple inline-block mr-4">
                 Download All as ZIP
             </a>
         ` : '';
@@ -174,7 +174,7 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Compression Results</title>
-                <script src="https://cdn.tailwindcss.com"></script>
+                <link rel="stylesheet" href="/styles.css">
             </head>
             <body class="bg-gray-100 min-h-screen py-8">
                 <div class="max-w-6xl mx-auto px-4">
@@ -192,7 +192,7 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
                     
                     <div class="text-center">
                         ${downloadAllButton}
-                        <a href="/" class="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600 transition duration-200 inline-block">
+                        <a href="/" class="btn-primary inline-block">
                             Compress More Images
                         </a>
                     </div>
