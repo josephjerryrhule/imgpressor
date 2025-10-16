@@ -3,8 +3,10 @@
 
 cd $FORGE_SITE_PATH
 
-# Pull latest changes
-git pull origin $FORGE_SITE_BRANCH
+# Don't pull - Forge handles git for us
+echo "📁 Current directory: $(pwd)"
+echo "📋 Files in directory:"
+ls -la
 
 # Install Node.js dependencies (Tailwind CSS now in production dependencies)
 npm ci --only=production
@@ -25,8 +27,8 @@ fi
 # Stop existing process (ignore errors if not running)
 pm2 delete imgpressor 2>/dev/null || true
 
-# Start the application with PM2
-NODE_ENV=production pm2 start ecosystem.config.js --env production
+# Start the application with PM2 (use absolute path)
+NODE_ENV=production pm2 start $(pwd)/ecosystem.config.js --env production
 
 # Save PM2 process list and corresponding environments
 pm2 save
@@ -38,7 +40,13 @@ pm2 startup systemd -u forge --hp /home/forge 2>/dev/null || true
 sudo service nginx reload
 
 # Show deployment status
-echo "✅ Image Compressor deployed successfully!"
 echo "📊 PM2 Status:"
-pm2 status imgpressor
+pm2 status
+
+# Test if app is responding locally
+echo "🔍 Testing local connection:"
+curl -s http://localhost:3000/test || echo "Local test failed"
+
+echo "✅ Image Compressor deployed successfully!"
+echo "� Deployed from: $(pwd)"
 echo "🌐 Site: https://pressor.themewire.co"
