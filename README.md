@@ -1,34 +1,57 @@
-# 🚀 Image Compressor - Production Deployment Guide
+# �️ ImgPressor - Image Compression Web App
 
-A production-ready image compression web app that converts images to WebP format with resizing and quality optimization.
+A production-ready image compression service that converts images to WebP format with smart resizing and quality optimization.
 
-## 📋 Features
+## ✨ Features
 
-- ✅ Multiple image upload support
-- ✅ URL-based image processing
-- ✅ WebP conversion with adjustable quality
-- ✅ Smart resizing (maintains aspect ratio)
-- ✅ Modern UI with TailwindCSS
-- ✅ Production-ready with security, logging, and monitoring
-- ✅ Multiple deployment options
+- 🖼️ **Multiple image upload** support with drag & drop
+- 🔗 **URL-based image processing** from any web source
+- 📦 **WebP conversion** with adjustable quality (10-100%)
+- 📏 **Smart resizing** (height ÷ 1.5, maintains aspect ratio)
+- 🎨 **Modern TailwindCSS UI** with responsive design
+- 📊 **Built-in storage management** with automatic cleanup
+- 🔒 **Production security** with rate limiting and CORS
+- 📈 **Health monitoring** and storage status endpoints
 
-## 🛠️ Quick Start (Development)
+## � Quick Start
 
+### Development
 ```bash
 # Install dependencies
 npm install
 
-# Start development server
+# Start development server with hot reload
 npm run dev
 
 # Visit http://localhost:3000
 ```
 
-## 🚀 Production Deployment Options
+### Production (Laravel Forge)
+```bash
+# Deploy with automatic storage management
+./enhanced-deploy.sh
+```
 
-### Option 1: Direct Server Deployment (Recommended)
+## 📁 Project Structure
 
-For any Linux server (Ubuntu, CentOS, Debian, etc.):
+```
+imgpressor/
+├── app.js                 # Main Express application
+├── cleanup.sh            # Automated cleanup script
+├── enhanced-deploy.sh    # Production deployment script
+├── nginx-forge.conf      # Nginx configuration for Laravel Forge
+├── stream-processing.js  # Alternative memory-based processing
+├── ecosystem.config.js   # PM2 process configuration
+├── package.json          # Dependencies and scripts
+├── tailwind.config.js    # TailwindCSS configuration
+├── public/
+│   ├── index.html        # Frontend interface
+│   ├── styles.css        # Compiled Tailwind styles
+│   └── optimized/        # Processed images (auto-cleaned)
+├── src/
+│   └── input.css         # Source Tailwind styles
+└── temp/                 # Temporary files (auto-cleaned)
+```
 
 ```bash
 # Run the automated deployment script
