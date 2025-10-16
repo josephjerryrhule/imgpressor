@@ -140,7 +140,7 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
                     </div>
                 </div>
                 <p class="text-sm text-green-600 font-medium">Saved: ${(result.savedBytes / 1024).toFixed(2)} KB (${result.savedPercentage}%)</p>
-                <a href="/optimized/${result.optimizedFilename}" download class="mt-2 inline-block btn-success text-sm py-1 px-3">
+                <a href="/optimized/${result.optimizedFilename}" download class="mt-2 inline-block btn-success text-sm py-2 px-4">
                     Download
                 </a>
             </div>
@@ -162,7 +162,7 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
         
         // Download all button (only show if more than one image)
         const downloadAllButton = results.length > 1 ? `
-                                    <a href="/download-all/${sessionId}" class="btn-purple inline-block mr-4">
+            <a href="/download-all/${sessionId}" class="btn-purple inline-block mr-4 py-2 px-6">
                 Download All as ZIP
             </a>
         ` : '';
@@ -192,7 +192,7 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
                     
                     <div class="text-center">
                         ${downloadAllButton}
-                        <a href="/" class="btn-primary inline-block">
+                        <a href="/" class="btn-primary inline-block py-2 px-6">
                             Compress More Images
                         </a>
                     </div>
