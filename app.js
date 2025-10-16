@@ -377,10 +377,158 @@ app.use((err, req, res, next) => {
     `);
 });
 
+// Cleanup function
+function cleanupFiles() {
+    const now = Date.now();
+    const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+    const sixHours = 6 * oneHour; // 6 hours
+    
+    // Clean temp directory (1 hour old files)
+    try {
+        const tempDir = path.join(__dirname, 'temp');
+        if (fs.existsSync(tempDir)) {
+            const tempFiles = fs.readdirSync(tempDir);
+            tempFiles.forEach(file => {
+                const filePath = path.join(tempDir, file);
+                const stats = fs.statSync(filePath);
+                if (now - stats.mtime.getTime() > oneHour) {
+                    fs.unlinkSync(filePath);
+                    console.log(`🧹 Cleaned temp file: ${file}`);
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error cleaning temp directory:', error.message);
+    }
+    
+    // Clean optimized directory (6 hour old files)
+    try {
+        const optimizedDir = path.join(__dirname, 'public', 'optimized');
+        if (fs.existsSync(optimizedDir)) {
+            function cleanDirectory(dir) {
+                const items = fs.readdirSync(dir);
+                items.forEach(item => {
+                    const itemPath = path.join(dir, item);
+                    const stats = fs.statSync(itemPath);
+                    
+                    if (stats.isDirectory()) {
+                        cleanDirectory(itemPath); // Recursively clean subdirectories
+                        // Remove empty directories
+                        try {
+                            if (fs.readdirSync(itemPath).length === 0) {
+                                fs.rmdirSync(itemPath);
+                                console.log(`🧹 Removed empty directory: ${item}`);
+                            }
+                        } catch (e) {}
+                    } else if (now - stats.mtime.getTime() > sixHours) {
+                        fs.unlinkSync(itemPath);
+                        console.log(`🧹 Cleaned optimized file: ${item}`);
+                    }
+                });
+            }
+            cleanDirectory(optimizedDir);
+        }
+    } catch (error) {
+        console.error('Error cleaning optimized directory:', error.message);
+    }
+}
+
+// Storage monitoring utilities
+const { execSync } = require('child_process');
+
+class StorageMonitor {
+    static getDiskUsage() {
+        try {
+            const output = execSync('df -h /home/forge/pressor.themewire.co', { encoding: 'utf8' });
+            const lines = output.trim().split('\n');
+            const dataLine = lines[1].split(/\s+/);
+            
+            return {
+                total: dataLine[1],
+                used: dataLine[2],
+                available: dataLine[3],
+                percentage: parseInt(dataLine[4].replace('%', ''))
+            };
+        } catch (error) {
+            console.error('Error getting disk usage:', error.message);
+            return null;
+        }
+    }
+    
+    static getDirectorySize(dirPath) {
+        try {
+            const output = execSync(`du -sh ${dirPath}`, { encoding: 'utf8' });
+            return output.trim().split('\t')[0];
+        } catch (error) {
+            return '0B';
+        }
+    }
+    
+    static checkStorageHealth() {
+        const usage = this.getDiskUsage();
+        if (!usage) return 'unknown';
+        
+        if (usage.percentage > 90) {
+            console.log(`🚨 CRITICAL: Disk usage at ${usage.percentage}%`);
+            return 'critical';
+        } else if (usage.percentage > 80) {
+            console.log(`⚠️  WARNING: Disk usage at ${usage.percentage}%`);
+            return 'high';
+        }
+        
+        return 'normal';
+    }
+    
+    static emergencyCleanup() {
+        console.log('🚨 Running emergency cleanup...');
+        try {
+            execSync('rm -rf ./temp/*');
+            execSync('find ./public/optimized -type f -mmin +10 -delete');
+            console.log('✅ Emergency cleanup completed');
+        } catch (error) {
+            console.error('Emergency cleanup failed:', error.message);
+        }
+    }
+}
+
+// Storage status endpoint
+app.get('/storage-status', (req, res) => {
+    const usage = StorageMonitor.getDiskUsage();
+    const tempSize = StorageMonitor.getDirectorySize('./temp');
+    const optimizedSize = StorageMonitor.getDirectorySize('./public/optimized');
+    
+    res.json({
+        disk: usage,
+        directories: {
+            temp: tempSize,
+            optimized: optimizedSize
+        },
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Enhanced cleanup with storage monitoring
+function smartCleanup() {
+    const storageHealth = StorageMonitor.checkStorageHealth();
+    
+    if (storageHealth === 'critical') {
+        StorageMonitor.emergencyCleanup();
+    } else {
+        cleanupFiles();
+    }
+}
+
+// Run cleanup every 30 minutes
+setInterval(smartCleanup, 30 * 60 * 1000);
+
+// Run initial cleanup on startup
+setTimeout(smartCleanup, 5000);
+
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running at http://0.0.0.0:${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🧹 Automatic cleanup enabled (every 30 minutes)`);
     console.log(`Available routes:`);
     console.log(`  GET  / - Main page`);
     console.log(`  POST /process - Image processing`);
