@@ -161,8 +161,20 @@ sudo systemctl reload nginx
 # Start the application with PM2
 echo "🚀 Starting application with PM2..."
 pm2 delete imgpressor 2>/dev/null || true
+
+# Ensure PM2 can write logs
 pm2 start ecosystem.config.js --env production
+
+# Save PM2 configuration
 pm2 save
+
+# Show PM2 status
+echo "📊 PM2 Status:"
+pm2 status
+
+# Show last few logs
+echo "📝 Recent logs:"
+pm2 logs imgpressor --lines 20 --nostream || echo "No logs yet"
 
 # Install SSL certificate with Certbot
 if command -v certbot &> /dev/null; then

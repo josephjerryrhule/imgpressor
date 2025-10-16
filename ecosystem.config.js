@@ -11,7 +11,11 @@ module.exports = {
     env_production: {
       NODE_ENV: 'production',
       PORT: 3000,
-      HOST: '0.0.0.0'
+      HOST: '0.0.0.0',
+      MAX_FILE_SIZE: 104857600,
+      UPLOAD_LIMIT: 10,
+      QUALITY_DEFAULT: 80,
+      RESIZE_FACTOR: 1.5
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',

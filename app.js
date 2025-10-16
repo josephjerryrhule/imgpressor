@@ -92,6 +92,40 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Debug route to check if server is responding
+app.get('/test', (req, res) => {
+    res.json({ 
+        status: 'Server is working',
+        timestamp: new Date().toISOString(),
+        nodeEnv: process.env.NODE_ENV,
+        port: PORT,
+        routes: [
+            'GET /',
+            'POST /process',
+            'GET /health',
+            'GET /download-all/:sessionId'
+        ]
+    });
+});
+
+// Simple test form for POST /process
+app.get('/test-form', (req, res) => {
+    res.send(`
+        <html>
+        <body>
+            <h1>Test Form for /process endpoint</h1>
+            <form action="/process" method="POST" enctype="multipart/form-data">
+                <p>Test URL: <input type="url" name="url" value="https://picsum.photos/400/300" /></p>
+                <p>Quality: <input type="number" name="quality" value="80" min="10" max="100" /></p>
+                <button type="submit">Test Process</button>
+            </form>
+            <br>
+            <a href="/">Back to main app</a>
+        </body>
+        </html>
+    `);
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.status(200).json({
@@ -104,6 +138,10 @@ app.get('/health', (req, res) => {
 });
 
 app.post('/process', upload.array('images', 10), async (req, res) => {
+    console.log('POST /process - Request received');
+    console.log('Files:', req.files ? req.files.length : 0);
+    console.log('Body URL:', req.body.url || 'none');
+    
     try {
         const quality = req.body.quality || 80;
         let results = [];
@@ -301,7 +339,41 @@ async function processImage(buffer, filename, quality, url = null) {
     };
 }
 
+// Error handling middleware
+app.use((req, res, next) => {
+    console.log(`404 - Route not found: ${req.method} ${req.url}`);
+    res.status(404).send(`
+        <h1>404 - Route Not Found</h1>
+        <p>The requested route <strong>${req.method} ${req.url}</strong> was not found.</p>
+        <p>Available routes:</p>
+        <ul>
+            <li>GET / - Main page</li>
+            <li>POST /process - Image processing</li>
+            <li>GET /health - Health check</li>
+            <li>GET /test - Server test</li>
+            <li>GET /download-all/:sessionId - Download all files</li>
+        </ul>
+        <a href="/">Go back to home</a>
+    `);
+});
+
+// Error handling for server errors
+app.use((err, req, res, next) => {
+    console.error('Server error:', err);
+    res.status(500).send(`
+        <h1>500 - Internal Server Error</h1>
+        <p>Error: ${err.message}</p>
+        <a href="/">Go back to home</a>
+    `);
+});
+
 // Start server
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running at http://0.0.0.0:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Available routes:`);
+    console.log(`  GET  / - Main page`);
+    console.log(`  POST /process - Image processing`);
+    console.log(`  GET  /health - Health check`);
+    console.log(`  GET  /test - Server test`);
 });
