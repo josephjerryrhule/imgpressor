@@ -6,11 +6,11 @@ cd $FORGE_SITE_PATH
 # Pull latest changes
 git pull origin $FORGE_SITE_BRANCH
 
-# Install Node.js dependencies (production only)
+# Install Node.js dependencies (Tailwind CSS now in production dependencies)
 npm ci --only=production
 
-# Build Tailwind CSS
-npm run build
+# Build Tailwind CSS (skip if build fails)
+npm run build || echo "CSS build failed, using existing styles.css"
 
 # Create necessary directories with proper permissions
 mkdir -p public/optimized logs temp

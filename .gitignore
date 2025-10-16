@@ -10,3 +10,4 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 temp/
+# Note: public/styles.css is intentionally committed for production deployment

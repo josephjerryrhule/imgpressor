@@ -5,11 +5,11 @@ cd /home/forge/pressor.themewire.co
 # Update repository
 git pull origin master
 
-# Install Node.js dependencies
+# Install Node.js dependencies (including Tailwind CSS)
 npm ci --only=production
 
-# Build CSS (Tailwind)
-npm run build
+# Build CSS (Tailwind) - skip if build fails
+npm run build || echo "CSS build failed, using existing styles.css"
 
 # Create necessary directories
 mkdir -p public/optimized
