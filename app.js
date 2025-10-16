@@ -109,11 +109,14 @@ app.get('/test', (req, res) => {
         timestamp: new Date().toISOString(),
         nodeEnv: process.env.NODE_ENV,
         port: PORT,
+        version: '2.0-enhanced-storage',
         routes: [
             'GET /',
             'POST /process',
             'GET /health',
-            'GET /download-all/:sessionId'
+            'GET /storage-status',
+            'GET /download-all/:sessionId',
+            'GET /test'
         ]
     });
 });
@@ -493,18 +496,37 @@ class StorageMonitor {
 
 // Storage status endpoint
 app.get('/storage-status', (req, res) => {
-    const usage = StorageMonitor.getDiskUsage();
-    const tempSize = StorageMonitor.getDirectorySize('./temp');
-    const optimizedSize = StorageMonitor.getDirectorySize('./public/optimized');
-    
-    res.json({
-        disk: usage,
-        directories: {
-            temp: tempSize,
-            optimized: optimizedSize
-        },
-        timestamp: new Date().toISOString()
-    });
+    console.log('📊 Storage status endpoint accessed');
+    try {
+        const usage = StorageMonitor.getDiskUsage();
+        const tempSize = StorageMonitor.getDirectorySize('./temp');
+        const optimizedSize = StorageMonitor.getDirectorySize('./public/optimized');
+        
+        const response = {
+            status: 'success',
+            disk: usage,
+            directories: {
+                temp: tempSize,
+                optimized: optimizedSize
+            },
+            app: {
+                version: '2.0-enhanced-storage',
+                currentDirectory: process.cwd(),
+                environment: process.env.NODE_ENV
+            },
+            timestamp: new Date().toISOString()
+        };
+        
+        console.log('📊 Storage status response:', JSON.stringify(response, null, 2));
+        res.json(response);
+    } catch (error) {
+        console.error('❌ Storage status error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
 });
 
 // Enhanced cleanup with storage monitoring
@@ -533,5 +555,7 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`  GET  / - Main page`);
     console.log(`  POST /process - Image processing`);
     console.log(`  GET  /health - Health check`);
+    console.log(`  GET  /storage-status - Storage monitoring`);
+    console.log(`  GET  /download-all/:sessionId - Download ZIP`);
     console.log(`  GET  /test - Server test`);
 });
