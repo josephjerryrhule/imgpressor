@@ -26,15 +26,14 @@ Thumbs.db
 *.tmp
 *~
 
-# Prevent deployment script clutter
-deploy-*.sh
-*-deploy.sh
+# Prevent deployment script clutter (but allow essential ones)
+deploy-digitalocean.sh
+deploy.sh
+forge-deploy.sh
+forge-debug.sh
 *-debug.sh
 *-diagnostic.sh
-nginx-*.conf
-forge-*.conf
-!nginx-forge.conf
-!enhanced-deploy.sh
-!cleanup.sh
+nginx.conf
+forge-nginx-*.conf
 
 # Note: public/styles.css is intentionally committed for production deployment
