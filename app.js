@@ -23,12 +23,24 @@ const upload = multer({
     }
 });
 
+// Cloudflare IP detection utility
+const getRealIP = (req) => {
+    return req.headers['cf-connecting-ip'] || 
+           req.headers['x-forwarded-for']?.split(',')[0] || 
+           req.connection.remoteAddress || 
+           req.socket.remoteAddress ||
+           'unknown';
+};
+
 // Request logging middleware for debugging
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    const realIP = getRealIP(req);
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url} [${realIP}]`);
     if (req.url.includes('/process')) {
         console.log('Process request - Headers:', Object.keys(req.headers));
         console.log('Content-Type:', req.headers['content-type']);
+        console.log('Real IP:', realIP);
+        console.log('CF-Country:', req.headers['cf-ipcountry'] || 'unknown');
     }
     next();
 });
@@ -37,6 +49,26 @@ app.use((req, res, next) => {
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// Cloudflare-optimized cache headers for processed images
+app.use('/optimized', (req, res, next) => {
+    res.set({
+        'Cache-Control': 'public, max-age=3600, s-maxage=86400', // 1 hour browser, 1 day CDN
+        'X-Content-Type-Options': 'nosniff',
+        'Vary': 'Accept-Encoding'
+    });
+    next();
+});
+
+// No-cache headers for API endpoints
+app.use(['/process', '/storage-status'], (req, res, next) => {
+    res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+    });
+    next();
+});
 
 // Helper function to download image
 async function downloadImage(url) {
@@ -109,7 +141,7 @@ app.get('/test', (req, res) => {
         timestamp: new Date().toISOString(),
         nodeEnv: process.env.NODE_ENV,
         port: PORT,
-        version: '2.0-enhanced-storage',
+        version: '2.1-cloudflare-ready',
         routes: [
             'GET /',
             'POST /process',
@@ -510,9 +542,15 @@ app.get('/storage-status', (req, res) => {
                 optimized: optimizedSize
             },
             app: {
-                version: '2.0-enhanced-storage',
+                version: '2.1-cloudflare-ready',
                 currentDirectory: process.cwd(),
                 environment: process.env.NODE_ENV
+            },
+            cloudflare: {
+                country: req.headers['cf-ipcountry'] || 'unknown',
+                realIP: getRealIP(req),
+                ray: req.headers['cf-ray'] || 'unknown',
+                cacheStatus: req.headers['cf-cache-status'] || 'unknown'
             },
             timestamp: new Date().toISOString()
         };
