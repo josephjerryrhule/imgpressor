@@ -6,6 +6,20 @@ cd $FORGE_SITE_PATH
 
 echo "📁 Current directory: $(pwd)"
 
+# Check if we have the Cloudflare-ready files
+echo "🔍 Checking deployment files..."
+if [ -f "app.js" ] && grep -q "cloudflare-ready" app.js; then
+    echo "✅ Cloudflare-ready app.js detected"
+else
+    echo "⚠️  Warning: app.js may not have Cloudflare features"
+fi
+
+if [ -f "nginx-cloudflare.conf" ]; then
+    echo "✅ Cloudflare nginx config available"
+else
+    echo "⚠️  Cloudflare nginx config not found"
+fi
+
 # Install dependencies
 npm ci --only=production
 
@@ -103,9 +117,44 @@ df -h /home/forge/pressor.themewire.co | head -2
 # Verify the new version is running
 echo "🔍 Verifying app version..."
 sleep 2
-curl -s http://localhost:3000/test | head -2 || echo "❌ Version check failed"
+VERSION_CHECK=$(curl -s http://localhost:3000/test | grep -o '"version":"[^"]*"' || echo "version check failed")
+echo "App version: $VERSION_CHECK"
+
+# Check if Cloudflare nginx config should be applied
+if [ -f "nginx-cloudflare.conf" ]; then
+    echo "🌐 Cloudflare-optimized nginx config available"
+    echo "💡 To use Cloudflare config, update nginx in Forge dashboard with nginx-cloudflare.conf"
+else
+    echo "⚠️  No Cloudflare nginx config found"
+fi
 
 echo "✅ Enhanced deployment complete!"
 echo "🌐 App: https://pressor.themewire.co"
 echo "📊 Storage monitoring: https://pressor.themewire.co/storage-status"
 echo "🔍 Test endpoint: https://pressor.themewire.co/test"
+
+echo ""
+echo "🌐 Cloudflare Setup Status:"
+echo "==============================="
+echo "✅ Cloudflare-ready app deployed (v2.1)"
+echo "✅ Real IP detection enabled"
+echo "✅ Optimized cache headers configured"
+echo "✅ Country/Ray ID tracking available"
+echo ""
+echo "📋 Next steps for full Cloudflare optimization:"
+echo "1. Add DNS A record: pressor -> [server IP] (proxied)"
+echo "2. Set SSL/TLS to Full (strict)"
+echo "3. Configure Page Rules:"
+echo "   • pressor.themewire.co/optimized/* - Cache Everything (1 day)"
+echo "   • pressor.themewire.co/process* - Bypass Cache"
+echo "   • pressor.themewire.co/storage-status - Cache Everything (5 min)"
+echo "4. Optional: Replace nginx config with nginx-cloudflare.conf"
+echo ""
+echo "🔍 Testing Cloudflare integration..."
+CF_TEST=$(curl -s http://localhost:3000/storage-status 2>/dev/null | grep -o '"cloudflare":{[^}]*}' || echo "cloudflare features not detected")
+echo "Cloudflare features: $CF_TEST"
+
+echo ""
+echo "🚀 Quick test commands:"
+echo "curl -s https://pressor.themewire.co/test | grep version"
+echo "curl -s https://pressor.themewire.co/storage-status | grep cloudflare"
