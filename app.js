@@ -4,6 +4,8 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+
+// Version: 2.2.0 - Multi-format support with upload progress (Force deploy)
 const multer = require('multer');
 const archiver = require('archiver');
 
