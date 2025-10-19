@@ -33,62 +33,320 @@
             </div>
             
             <div>
-                <label for="quality" class="block text-sm font-medium text-gray-700 mb-1">Quality: <span id="qualityValue">80</span>%</label>
-                <input type="range" id="quality" name="quality" min="10" max="100" value="80" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Output Format</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="webp" checked class="mr-2">
+                        <div>
+                            <div class="font-medium text-sm">WebP</div>
+                            <div class="text-xs text-gray-500">Best compression</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="avif" class="mr-2">
+                        <div>
+                            <div class="font-medium text-sm">AVIF</div>
+                            <div class="text-xs text-gray-500">Highest quality</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="jpeg" class="mr-2">
+                        <div>
+                            <div class="font-medium text-sm">JPEG</div>
+                            <div class="text-xs text-gray-500">Universal support</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="format" value="png" class="mr-2">
+                        <div>
+                            <div class="font-medium text-sm">PNG</div>
+                            <div class="text-xs text-gray-500">Lossless</div>
+                        </div>
+                    </label>
+                </div>
             </div>
             
-            <button type="submit" class="w-full btn-primary py-2 px-6">
-                Compress Image
+            <div>
+                <label for="quality" class="block text-sm font-medium text-gray-700 mb-1">Quality: <span id="qualityValue">80</span>%</label>
+                <input type="range" id="quality" name="quality" min="10" max="100" value="80" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                <div class="text-xs text-gray-500 mt-1">Higher quality = larger file size</div>
+            </div>
+            
+            <!-- Upload Progress -->
+            <div id="uploadProgress" class="hidden">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-sm font-medium text-gray-700">Uploading...</span>
+                    <span id="uploadPercent" class="text-sm text-gray-500">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="uploadBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300 w-0"></div>
+                </div>
+            </div>
+            
+            <!-- Processing Progress -->
+            <div id="processProgress" class="hidden">
+                <div class="flex items-center justify-center space-x-2 py-2">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span class="text-sm text-gray-600">Compressing images...</span>
+                </div>
+            </div>
+            
+            <button type="submit" id="compressBtn" class="w-full btn-primary py-2 px-6 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <span id="btnText">Select images to compress</span>
             </button>
         </form>
     </div>
 
     <script>
+        // DOM Elements
         const qualitySlider = document.getElementById('quality');
         const qualityValue = document.getElementById('qualityValue');
         const fileInput = document.getElementById('images');
         const fileList = document.getElementById('fileList');
-        const dropZone = fileInput.parentElement.querySelector('.border-dashed');
+        const dropZone = fileInput.parentElement.querySelector('.drop-zone');
+        const compressBtn = document.getElementById('compressBtn');
+        const btnText = document.getElementById('btnText');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const processProgress = document.getElementById('processProgress');
+        const uploadBar = document.getElementById('uploadBar');
+        const uploadPercent = document.getElementById('uploadPercent');
+        const form = document.querySelector('form');
+        const urlInput = document.getElementById('url');
         
+        let uploadComplete = false;
+        let filesSelected = false;
+        
+        // Quality slider
         qualitySlider.addEventListener('input', function() {
             qualityValue.textContent = this.value;
         });
         
+        // File input change
         fileInput.addEventListener('change', function() {
-            updateFileList(this.files);
+            handleFileSelection(this.files);
+        });
+        
+        // URL input change  
+        urlInput.addEventListener('input', function() {
+            updateButtonState();
+        });
+        
+        // Format radio buttons
+        document.querySelectorAll('input[name="format"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const formatInfo = {
+                    webp: 'Best compression, modern browsers',
+                    avif: 'Highest quality, newer browsers',
+                    jpeg: 'Universal support, lossy',
+                    png: 'Lossless, larger files'
+                };
+                // You could show format info here if needed
+            });
         });
         
         // Drag and drop functionality
         dropZone.addEventListener('dragover', function(e) {
             e.preventDefault();
-            this.classList.add('dragover');
+            this.classList.add('border-blue-500', 'bg-blue-50');
         });
         
         dropZone.addEventListener('dragleave', function(e) {
             e.preventDefault();
-            this.classList.remove('dragover');
+            this.classList.remove('border-blue-500', 'bg-blue-50');
         });
         
         dropZone.addEventListener('drop', function(e) {
             e.preventDefault();
-            this.classList.remove('dragover');
+            this.classList.remove('border-blue-500', 'bg-blue-50');
             const files = e.dataTransfer.files;
             fileInput.files = files;
-            updateFileList(files);
+            handleFileSelection(files);
         });
+        
+        // Form submission with progress
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!uploadComplete && filesSelected) {
+                alert('Please wait for file upload to complete');
+                return;
+            }
+            
+            submitForm();
+        });
+        
+        function handleFileSelection(files) {
+            if (files.length === 0) {
+                filesSelected = false;
+                uploadComplete = false;
+                updateButtonState();
+                fileList.innerHTML = '';
+                return;
+            }
+            
+            filesSelected = true;
+            uploadComplete = false;
+            updateFileList(files);
+            simulateUploadProgress(files);
+        }
         
         function updateFileList(files) {
             fileList.innerHTML = '';
             Array.from(files).forEach((file, index) => {
                 const fileItem = document.createElement('div');
                 fileItem.className = 'flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md';
+                
+                // Validate file size (100MB limit)
+                const isLarge = file.size > 100 * 1024 * 1024;
+                const sizeClass = isLarge ? 'text-red-500' : 'text-gray-500';
+                const sizeText = formatFileSize(file.size);
+                
                 fileItem.innerHTML = `
-                    <span class="text-sm text-gray-700">${file.name}</span>
-                    <span class="text-xs text-gray-500">${(file.size / 1024).toFixed(1)} KB</span>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-2 h-2 bg-gray-400 rounded-full" id="status-${index}"></div>
+                        <span class="text-sm text-gray-700">${file.name}</span>
+                    </div>
+                    <span class="text-xs ${sizeClass}">${sizeText}</span>
                 `;
                 fileList.appendChild(fileItem);
             });
         }
+        
+        function simulateUploadProgress(files) {
+            uploadProgress.classList.remove('hidden');
+            uploadComplete = false;
+            updateButtonState();
+            
+            let progress = 0;
+            const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0);
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    uploadComplete = true;
+                    setTimeout(() => {
+                        uploadProgress.classList.add('hidden');
+                        updateButtonState();
+                        markFilesComplete(files.length);
+                    }, 500);
+                }
+                
+                uploadBar.style.width = progress + '%';
+                uploadPercent.textContent = Math.round(progress) + '%';
+            }, 200);
+        }
+        
+        function markFilesComplete(fileCount) {
+            for (let i = 0; i < fileCount; i++) {
+                const statusDot = document.getElementById(`status-${i}`);
+                if (statusDot) {
+                    statusDot.classList.remove('bg-gray-400');
+                    statusDot.classList.add('bg-green-500');
+                }
+            }
+        }
+        
+        function updateButtonState() {
+            const hasUrl = urlInput.value.trim() !== '';
+            const hasFiles = filesSelected && uploadComplete;
+            const canSubmit = hasUrl || hasFiles;
+            
+            compressBtn.disabled = !canSubmit;
+            
+            if (!filesSelected && !hasUrl) {
+                btnText.textContent = 'Select images or enter URL';
+            } else if (filesSelected && !uploadComplete) {
+                btnText.textContent = 'Uploading...';
+            } else if (canSubmit) {
+                btnText.textContent = 'Compress Images';
+            }
+        }
+        
+        function submitForm() {
+            processProgress.classList.remove('hidden');
+            compressBtn.disabled = true;
+            btnText.textContent = 'Compressing...';
+            
+            const formData = new FormData(form);
+            const isSingleFile = (filesSelected && fileInput.files.length === 1) || urlInput.value.trim();
+            
+            // Add JSON accept header for single file direct download
+            const headers = {};
+            if (isSingleFile) {
+                headers['Accept'] = 'application/json, image/*, text/html';
+            }
+            
+            fetch('/process', {
+                method: 'POST',
+                body: formData,
+                headers: headers
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Handle different response types
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/zip')) {
+                        return response.blob().then(blob => {
+                            downloadFile(blob, 'compressed_images.zip');
+                        });
+                    } else if (contentType && contentType.includes('image/')) {
+                        return response.blob().then(blob => {
+                            const format = formData.get('format') || 'webp';
+                            const fileName = isSingleFile && fileInput.files[0] ? 
+                                fileInput.files[0].name.split('.')[0] + '_compressed.' + format :
+                                'compressed_image.' + format;
+                            downloadFile(blob, fileName);
+                        });
+                    } else {
+                        return response.text().then(text => {
+                            document.body.innerHTML = text;
+                        });
+                    }
+                } else {
+                    throw new Error('Compression failed');
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            })
+            .finally(() => {
+                processProgress.classList.add('hidden');
+                resetForm();
+            });
+        }
+        
+        function downloadFile(blob, filename) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+        
+        function resetForm() {
+            filesSelected = false;
+            uploadComplete = false;
+            fileList.innerHTML = '';
+            fileInput.value = '';
+            urlInput.value = '';
+            updateButtonState();
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+        
+        // Initialize button state
+        updateButtonState();
     </script>
 </body>
 </html>

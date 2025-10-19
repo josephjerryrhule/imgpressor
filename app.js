@@ -99,8 +99,8 @@ async function downloadImage(url) {
     }
 }
 
-// Helper function to optimize image
-async function optimizeImage(buffer, quality = 80) {
+// Helper function to optimize image with format support
+async function optimizeImage(buffer, quality = 80, format = 'webp') {
     try {
         // Get metadata
         const metadata = await sharp(buffer).metadata();
@@ -108,13 +108,55 @@ async function optimizeImage(buffer, quality = 80) {
         // Calculate new height (original / 1.5)
         const newHeight = Math.round(metadata.height / 1.5);
         
-        // Resize and convert to WebP
-        const optimizedBuffer = await sharp(buffer)
-            .resize({ height: newHeight, withoutEnlargement: true })
-            .webp({ quality: parseInt(quality) })
-            .toBuffer();
+        // Start with resize
+        let pipeline = sharp(buffer)
+            .resize({ height: newHeight, withoutEnlargement: true });
         
-        return optimizedBuffer;
+        // Apply format-specific optimization
+        switch (format.toLowerCase()) {
+            case 'webp':
+                pipeline = pipeline.webp({ 
+                    quality: parseInt(quality),
+                    effort: 4 
+                });
+                break;
+                
+            case 'avif':
+                pipeline = pipeline.avif({ 
+                    quality: parseInt(quality),
+                    effort: 4 
+                });
+                break;
+                
+            case 'jpeg':
+            case 'jpg':
+                pipeline = pipeline.jpeg({ 
+                    quality: parseInt(quality),
+                    progressive: true,
+                    mozjpeg: true 
+                });
+                break;
+                
+            case 'png':
+                pipeline = pipeline.png({ 
+                    quality: parseInt(quality),
+                    compressionLevel: 9,
+                    progressive: true
+                });
+                break;
+                
+            default:
+                // Default to WebP for unsupported formats
+                pipeline = pipeline.webp({ 
+                    quality: parseInt(quality),
+                    effort: 4 
+                });
+                format = 'webp';
+        }
+        
+        const optimizedBuffer = await pipeline.toBuffer();
+        
+        return { buffer: optimizedBuffer, format: format };
     } catch (error) {
         throw new Error(`Image optimization failed: ${error.message}`);
     }
@@ -189,21 +231,45 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
     
     try {
         const quality = req.body.quality || 80;
+        const format = req.body.format || 'webp';
         let results = [];
+        
+        console.log('Processing with format:', format, 'quality:', quality);
         
         if (req.files && req.files.length > 0) {
             // Process uploaded files
             for (const file of req.files) {
-                const result = await processImage(file.buffer, file.originalname, quality);
+                const result = await processImage(file.buffer, file.originalname, quality, format);
                 results.push(result);
             }
         } else if (req.body.url) {
             // Process URL
             const originalBuffer = await downloadImage(req.body.url);
-            const result = await processImage(originalBuffer, 'url_image.jpg', quality, req.body.url);
+            const result = await processImage(originalBuffer, 'url_image.jpg', quality, format, req.body.url);
             results.push(result);
         } else {
             return res.status(400).send('<h1>Error: Please provide images or a URL.</h1><a href="/">Go back</a>');
+        }
+        
+        // Handle single file direct download if requested via AJAX
+        if (req.headers.accept && req.headers.accept.includes('application/json') && results.length === 1) {
+            const result = results[0];
+            const filePath = path.join(__dirname, 'public', 'optimized', result.optimizedFilename);
+            
+            if (fs.existsSync(filePath)) {
+                const fileBuffer = fs.readFileSync(filePath);
+                const mimeTypes = {
+                    'webp': 'image/webp',
+                    'avif': 'image/avif', 
+                    'jpeg': 'image/jpeg',
+                    'jpg': 'image/jpeg',
+                    'png': 'image/png'
+                };
+                
+                res.setHeader('Content-Type', mimeTypes[result.format] || 'image/webp');
+                res.setHeader('Content-Disposition', `attachment; filename="${result.name.split('.')[0]}_compressed.${result.format}"`);
+                return res.send(fileBuffer);
+            }
         }
         
         // Generate result page
@@ -217,7 +283,7 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
                         <p class="text-xs text-gray-500 mt-1">${(result.originalSize / 1024).toFixed(2)} KB</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-600 mb-2">Optimized (WebP)</p>
+                        <p class="text-sm text-gray-600 mb-2">Optimized (${result.format?.toUpperCase() || 'WebP'})</p>
                         <img src="/optimized/${result.optimizedFilename}" alt="Optimized" class="w-full h-32 object-cover rounded-lg">
                         <p class="text-xs text-gray-500 mt-1">${(result.optimizedSize / 1024).toFixed(2)} KB</p>
                     </div>
@@ -349,15 +415,17 @@ app.get('/download-all/:sessionId', async (req, res) => {
 });
 
 // Helper function to process a single image
-async function processImage(buffer, filename, quality, url = null) {
+async function processImage(buffer, filename, quality, format = 'webp', url = null) {
     const originalSize = buffer.length;
     
     // Optimize image
-    const optimizedBuffer = await optimizeImage(buffer, quality);
+    const optimized = await optimizeImage(buffer, quality, format);
+    const optimizedBuffer = optimized.buffer;
+    const outputFormat = optimized.format;
     const optimizedSize = optimizedBuffer.length;
     
-    // Save optimized image with original name but .webp extension
-    const optimizedFilename = saveBuffer(optimizedBuffer, filename, 'webp');
+    // Save optimized image with original name but new extension
+    const optimizedFilename = saveBuffer(optimizedBuffer, filename, outputFormat);
     
     // Save original for preview if from upload
     let originalPreview;
@@ -380,7 +448,8 @@ async function processImage(buffer, filename, quality, url = null) {
         originalSize,
         optimizedSize,
         savedBytes,
-        savedPercentage
+        savedPercentage,
+        format: outputFormat
     };
 }
 
