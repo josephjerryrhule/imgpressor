@@ -3,12 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Compressor</title>
+    
+    <!-- SEO Meta Tags -->
+    <title>ImgPressor - Free Online Image Compressor | Reduce Image Size Without Quality Loss</title>
+    <meta name="description" content="Compress images online for free with ImgPressor. Reduce JPG, PNG, WebP, and AVIF file sizes by up to 90% without losing quality. Fast, secure, and easy to use image optimization tool.">
+    <meta name="keywords" content="image compressor, compress images, reduce image size, image optimization, JPG compressor, PNG compressor, WebP converter, AVIF converter, free image tool">
+    <meta name="author" content="ImgPressor">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://pressor.themewire.co">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pressor.themewire.co">
+    <meta property="og:title" content="ImgPressor - Free Online Image Compressor">
+    <meta property="og:description" content="Compress images online for free. Reduce JPG, PNG, WebP, and AVIF file sizes by up to 90% without losing quality. Fast, secure, and easy to use.">
+    <meta property="og:image" content="https://pressor.themewire.co/apple-touch-icon.png">
+    <meta property="og:site_name" content="ImgPressor">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://pressor.themewire.co">
+    <meta property="twitter:title" content="ImgPressor - Free Online Image Compressor">
+    <meta property="twitter:description" content="Compress images online for free. Reduce file sizes by up to 90% without losing quality.">
+    <meta property="twitter:image" content="https://pressor.themewire.co/apple-touch-icon.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/site.webmanifest">
+    
+    <!-- Theme -->
+    <meta name="theme-color" content="#3B82F6">
+    <meta name="msapplication-TileColor" content="#3B82F6">
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "ImgPressor",
+      "description": "Free online image compressor that reduces file sizes without quality loss. Supports JPG, PNG, WebP, and AVIF formats.",
+      "url": "https://pressor.themewire.co",
+      "applicationCategory": "ImageApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Image compression",
+        "Multi-format support (JPG, PNG, WebP, AVIF)",
+        "Batch processing",
+        "No file size limits",
+        "Privacy-focused (files auto-deleted)"
+      ],
+      "screenshot": "https://pressor.themewire.co/apple-touch-icon.png",
+      "author": {
+        "@type": "Organization",
+        "name": "ImgPressor"
+      }
+    }
+    </script>
+    
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 class="text-2xl font-bold text-center mb-6 text-gray-800">Image Compressor</h1>
+        <h1 class="text-2xl font-bold text-center mb-6 text-gray-800">
+            <span class="text-blue-600">Img</span>Pressor
+        </h1>
         <form action="/process" method="POST" enctype="multipart/form-data" class="space-y-4">
             <div>
                 <label for="url" class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>

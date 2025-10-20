@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://pressor.themewire.co/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Disallow temporary files
+Disallow: /uploads/
+Disallow: /temp/
+Disallow: /*.log

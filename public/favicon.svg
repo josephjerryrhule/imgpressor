@@ -1,0 +1,22 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="15" fill="#3B82F6" stroke="#1E40AF" stroke-width="2"/>
+  
+  <!-- Image compression icon -->
+  <!-- Top image stack -->
+  <rect x="8" y="7" width="8" height="6" rx="1" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="0.5"/>
+  <rect x="9" y="8" width="6" height="4" rx="0.5" fill="#F3F4F6"/>
+  <circle cx="11" cy="9.5" r="0.5" fill="#3B82F6"/>
+  
+  <!-- Compression arrows -->
+  <path d="M16 15 L20 11 L20 13 L24 13 L24 15 L20 15 L20 17 Z" fill="#FFFFFF"/>
+  <path d="M16 17 L12 21 L12 19 L8 19 L8 17 L12 17 L12 15 Z" fill="#FFFFFF"/>
+  
+  <!-- Bottom compressed image -->
+  <rect x="16" y="19" width="8" height="6" rx="1" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="0.5"/>
+  <rect x="17" y="20" width="6" height="4" rx="0.5" fill="#F3F4F6"/>
+  <circle cx="19" cy="21.5" r="0.5" fill="#10B981"/>
+  
+  <!-- Compression indicator -->
+  <text x="21" y="23.5" fill="#10B981" font-family="Arial, sans-serif" font-size="3" font-weight="bold">-50%</text>
+</svg>
