@@ -700,6 +700,34 @@ setInterval(smartCleanup, 30 * 60 * 1000);
 // Run initial cleanup on startup
 setTimeout(smartCleanup, 5000);
 
+// Debug endpoint to check deployment sync
+app.get('/debug-version', (req, res) => {
+    try {
+        const packageJson = require('./package.json');
+        const fs = require('fs');
+        const packagePath = require.resolve('./package.json');
+        const packageStats = fs.statSync(packagePath);
+        
+        res.json({
+            packageVersion: packageJson.version,
+            packagePath: packagePath,
+            packageModified: packageStats.mtime,
+            currentTime: new Date().toISOString(),
+            processUptime: process.uptime(),
+            nodeVersion: process.version,
+            deployment: {
+                lastCommit: '571ddbe - Force deployment trigger',
+                expectedVersion: '2.3.0'
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
 // Performance test endpoint
 app.get('/perf-test', async (req, res) => {
     try {
