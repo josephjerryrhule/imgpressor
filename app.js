@@ -230,7 +230,7 @@ app.get('/test', (req, res) => {
         timestamp: new Date().toISOString(),
         nodeEnv: process.env.NODE_ENV,
         port: PORT,
-        version: '2.1-cloudflare-ready',
+        version: require('./package.json').version,
         routes: [
             'GET /',
             'POST /process',
@@ -658,7 +658,7 @@ app.get('/storage-status', (req, res) => {
                 optimized: optimizedSize
             },
             app: {
-                version: '2.1-cloudflare-ready',
+                version: require('./package.json').version,
                 currentDirectory: process.cwd(),
                 environment: process.env.NODE_ENV
             },

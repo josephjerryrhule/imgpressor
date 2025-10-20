@@ -1,6 +1,6 @@
 {
   "name": "imgpressor",
-  "version": "1.0.0",
+  "version": "2.3.0",
   "description": "Production-ready image compression web app",
   "main": "app.js",
   "scripts": {
