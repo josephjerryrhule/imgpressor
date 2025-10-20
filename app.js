@@ -4,8 +4,9 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const compression = require('compression');
 
-// Version: 2.2.0 - Multi-format support with upload progress (Force deploy)
+// Version: 2.3.0 - Performance optimizations and cache busting
 const multer = require('multer');
 const archiver = require('archiver');
 
@@ -34,6 +35,19 @@ const getRealIP = (req) => {
            'unknown';
 };
 
+// Enable compression for all responses
+app.use(compression({
+    level: 6, // Good balance between compression and speed
+    threshold: 1024, // Only compress files larger than 1KB
+    filter: (req, res) => {
+        // Compress everything except images (already compressed)
+        if (req.headers['x-no-compression']) {
+            return false;
+        }
+        return compression.filter(req, res);
+    }
+}));
+
 // Request logging middleware for debugging
 app.use((req, res, next) => {
     const realIP = getRealIP(req);
@@ -48,7 +62,25 @@ app.use((req, res, next) => {
 });
 
 // Middleware
-app.use(express.static('public'));
+// Cache-busting for static files during development/updates
+app.use(express.static('public', {
+    etag: true,
+    lastModified: true,
+    setHeaders: (res, path) => {
+        if (path.endsWith('.html')) {
+            // No cache for HTML files to ensure updates are seen
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        } else if (path.endsWith('.css') || path.endsWith('.js')) {
+            // Short cache for CSS/JS with ETag for cache validation
+            res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+        } else {
+            // Longer cache for images and other assets
+            res.setHeader('Cache-Control', 'public, max-age=3600');
+        }
+    }
+}));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -107,26 +139,36 @@ async function optimizeImage(buffer, quality = 80, format = 'webp') {
         // Get metadata
         const metadata = await sharp(buffer).metadata();
         
-        // Calculate new height (original / 1.5)
+        // Calculate new height (original / 1.5) for faster processing
         const newHeight = Math.round(metadata.height / 1.5);
         
-        // Start with resize
-        let pipeline = sharp(buffer)
-            .resize({ height: newHeight, withoutEnlargement: true });
+        // Start with resize - use faster algorithms for better performance
+        let pipeline = sharp(buffer, {
+            // Performance optimizations
+            sequentialRead: true,
+            density: 72 // Lower DPI for web use
+        })
+        .resize({ 
+            height: newHeight, 
+            withoutEnlargement: true,
+            kernel: sharp.kernel.cubic // Faster than lanczos
+        });
         
-        // Apply format-specific optimization
+        // Apply format-specific optimization with speed focus
         switch (format.toLowerCase()) {
             case 'webp':
                 pipeline = pipeline.webp({ 
                     quality: parseInt(quality),
-                    effort: 4 
+                    effort: 2, // Reduced from 4 for speed (0-6 scale)
+                    smartSubsample: true // Faster subsampling
                 });
                 break;
                 
             case 'avif':
                 pipeline = pipeline.avif({ 
                     quality: parseInt(quality),
-                    effort: 4 
+                    effort: 2, // Reduced from 4 for speed (0-9 scale)
+                    chromaSubsampling: '4:2:0' // Faster subsampling
                 });
                 break;
                 
@@ -134,16 +176,18 @@ async function optimizeImage(buffer, quality = 80, format = 'webp') {
             case 'jpg':
                 pipeline = pipeline.jpeg({ 
                     quality: parseInt(quality),
-                    progressive: true,
-                    mozjpeg: true 
+                    progressive: false, // Faster than progressive
+                    mozjpeg: false, // Use faster libjpeg instead of mozjpeg
+                    optimiseScans: false // Skip scan optimization for speed
                 });
                 break;
                 
             case 'png':
                 pipeline = pipeline.png({ 
                     quality: parseInt(quality),
-                    compressionLevel: 9,
-                    progressive: true
+                    compressionLevel: 6, // Reduced from 9 for speed (0-9 scale)
+                    progressive: false, // Faster than progressive
+                    adaptiveFiltering: false // Skip adaptive filtering for speed
                 });
                 break;
                 
@@ -151,7 +195,8 @@ async function optimizeImage(buffer, quality = 80, format = 'webp') {
                 // Default to WebP for unsupported formats
                 pipeline = pipeline.webp({ 
                     quality: parseInt(quality),
-                    effort: 4 
+                    effort: 2,
+                    smartSubsample: true
                 });
                 format = 'webp';
         }
@@ -654,6 +699,50 @@ setInterval(smartCleanup, 30 * 60 * 1000);
 
 // Run initial cleanup on startup
 setTimeout(smartCleanup, 5000);
+
+// Performance test endpoint
+app.get('/perf-test', async (req, res) => {
+    try {
+        // Create a test image buffer (1x1 pixel)
+        const testBuffer = await sharp({
+            create: {
+                width: 100,
+                height: 100,
+                channels: 3,
+                background: { r: 255, g: 0, b: 0 }
+            }
+        }).jpeg().toBuffer();
+
+        const startTime = Date.now();
+        
+        // Test compression
+        await optimizeImage(testBuffer, 80, 'webp');
+        
+        const endTime = Date.now();
+        const processingTime = endTime - startTime;
+        
+        res.json({
+            status: 'ok',
+            processingTime: `${processingTime}ms`,
+            performance: processingTime < 100 ? 'excellent' : 
+                        processingTime < 500 ? 'good' : 
+                        processingTime < 1000 ? 'fair' : 'slow',
+            timestamp: new Date().toISOString(),
+            serverInfo: {
+                nodeVersion: process.version,
+                platform: process.platform,
+                arch: process.arch,
+                uptime: Math.round(process.uptime())
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            message: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
 
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
