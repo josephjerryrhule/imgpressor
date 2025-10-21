@@ -359,13 +359,53 @@
             const isSingleFile = (filesSelected && fileInput.files.length === 1) || urlInput.value.trim();
             const fileCount = filesSelected ? fileInput.files.length : 1;
             
+            // Progress tracking variables
+            let currentProgress = 5;
+            let progressTimer = null;
+            let uploadStarted = false;
+            let processingStarted = false;
+            
+            // Fallback progress simulation
+            function simulateProgress() {
+                progressTimer = setInterval(() => {
+                    if (!uploadStarted && currentProgress < 25) {
+                        currentProgress += Math.random() * 3;
+                        updateCompressionProgress(
+                            Math.min(currentProgress, 25), 
+                            'Uploading files...', 
+                            `Sending ${fileCount} file${fileCount > 1 ? 's' : ''} to server...`
+                        );
+                    } else if (!processingStarted && currentProgress < 60) {
+                        currentProgress += Math.random() * 2;
+                        updateCompressionProgress(
+                            Math.min(currentProgress, 60), 
+                            'Processing images...', 
+                            `Server processing ${fileCount} image${fileCount > 1 ? 's' : ''}...`
+                        );
+                    } else if (currentProgress < 90) {
+                        currentProgress += Math.random() * 1.5;
+                        updateCompressionProgress(
+                            Math.min(currentProgress, 90), 
+                            'Compressing images...', 
+                            `Optimizing and compressing files...`
+                        );
+                    }
+                    
+                    if (currentProgress >= 90) {
+                        clearInterval(progressTimer);
+                    }
+                }, 300);
+            }
+            
             // Use XMLHttpRequest for progress tracking
             const xhr = new XMLHttpRequest();
             
             // Track upload progress
             xhr.upload.addEventListener('progress', function(e) {
+                uploadStarted = true;
                 if (e.lengthComputable) {
-                    const uploadPercent = (e.loaded / e.total) * 25; // Upload is 25% of total
+                    const uploadPercent = 5 + (e.loaded / e.total) * 20; // Upload is 5-25% of total
+                    currentProgress = uploadPercent;
                     updateCompressionProgress(
                         uploadPercent, 
                         'Uploading files...', 
@@ -374,10 +414,18 @@
                 }
             });
             
-            // Track response progress
+            // Track download progress
             xhr.addEventListener('progress', function(e) {
                 if (e.lengthComputable) {
-                    const responsePercent = 75 + (e.loaded / e.total) * 25; // Response is final 25%
+                    const responsePercent = 75 + (e.loaded / e.total) * 20; // Response is 75-95%
+                    currentProgress = responsePercent;
+                    updateCompressionProgress(
+                        responsePercent, 
+                        'Downloading results...', 
+                        `Receiving compressed files...`
+                    );
+                }
+            });
                     updateCompressionProgress(
                         responsePercent, 
                         'Downloading results...', 
@@ -388,18 +436,24 @@
             
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
+                    processingStarted = true;
+                    clearInterval(progressTimer); // Stop fallback simulation
+                    currentProgress = 30;
                     updateCompressionProgress(
                         30, 
                         'Processing images...', 
                         `Server received ${fileCount} file${fileCount > 1 ? 's' : ''} - starting compression`
                     );
                 } else if (xhr.readyState === XMLHttpRequest.LOADING) {
+                    currentProgress = 60;
                     updateCompressionProgress(
                         60, 
                         'Compressing images...', 
                         `Optimizing ${fileCount} image${fileCount > 1 ? 's' : ''} - reducing file size`
                     );
                 } else if (xhr.readyState === XMLHttpRequest.DONE) {
+                    clearInterval(progressTimer); // Ensure timer is stopped
+                    currentProgress = 100;
                     updateCompressionProgress(100, 'Complete!', 'Processing finished successfully');
                     
                     if (xhr.status === 200) {
@@ -423,10 +477,12 @@
                         
                         // Hide progress after showing completion
                         setTimeout(() => {
+                            clearInterval(progressTimer); // Ensure timer is cleared
                             processProgress.classList.add('hidden');
                             resetForm();
                         }, 2000);
                     } else {
+                        clearInterval(progressTimer); // Clear timer on error
                         processProgress.classList.add('hidden');
                         alert('Error: Compression failed (Status: ' + xhr.status + ')');
                         resetForm();
@@ -435,6 +491,7 @@
             };
             
             xhr.onerror = function() {
+                clearInterval(progressTimer); // Stop timer on error
                 processProgress.classList.add('hidden');
                 alert('Error: Network error occurred');
                 resetForm();
@@ -449,8 +506,13 @@
                 xhr.setRequestHeader('Accept', 'application/json, image/*, text/html');
             }
             
-            // Start the request
+            // Start the request with progress tracking
             updateCompressionProgress(5, 'Preparing compression...', 'Initializing image processing');
+            
+            // Start fallback progress simulation
+            simulateProgress();
+            
+            // Send the request
             xhr.send(formData);
         }
         
