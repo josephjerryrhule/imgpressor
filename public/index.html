@@ -243,12 +243,15 @@
         // Form submission with progress
         form.addEventListener('submit', function(e) {
             e.preventDefault();
+            console.log('Form submitted - filesSelected:', filesSelected, 'uploadComplete:', uploadComplete);
             
             if (!uploadComplete && filesSelected) {
+                console.log('Form submission blocked - upload not complete');
                 alert('Please wait for file upload to complete');
                 return;
             }
             
+            console.log('Form submission proceeding...');
             submitForm();
         });
         
@@ -320,8 +323,30 @@
             uploadComplete = false;
             updateButtonState();
             
+            console.log('Starting upload simulation for', files.length, 'files');
+            
             // Show initial preparation stage
-            updateCompressionProgress(5, 'Preparing files');
+            updateCompressionProgress(5, 'Preparing files', 'Getting files ready for upload...');
+            
+            // Simulate upload progress
+            let progress = 5;
+            const progressInterval = setInterval(() => {
+                progress += 15;
+                if (progress < 100) {
+                    updateCompressionProgress(progress, 'Uploading files...', `Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`);
+                } else {
+                    clearInterval(progressInterval);
+                    updateCompressionProgress(100, 'Upload complete', 'Files ready for compression');
+                    uploadComplete = true;
+                    updateButtonState();
+                    console.log('Upload simulation complete, uploadComplete set to true');
+                    
+                    // Hide upload progress after a moment
+                    setTimeout(() => {
+                        uploadProgress.classList.add('hidden');
+                    }, 1000);
+                }
+            }, 500);
         }
         
         function markFilesComplete(fileCount) {
@@ -351,162 +376,93 @@
         }
         
         function submitForm() {
+            console.log('submitForm called'); // Debug log
+            console.log('fileInput.files:', fileInput.files);
+            console.log('urlInput.value:', urlInput.value);
+            console.log('filesSelected:', filesSelected);
+            
             processProgress.classList.remove('hidden');
             compressBtn.disabled = true;
             btnText.textContent = 'Compressing...';
             
             const formData = new FormData(form);
+            console.log('FormData created, entries:', [...formData.entries()]);
+            
             const isSingleFile = (filesSelected && fileInput.files.length === 1) || urlInput.value.trim();
             const fileCount = filesSelected ? fileInput.files.length : 1;
             
-            // Progress tracking variables
-            let currentProgress = 5;
-            let progressTimer = null;
-            let uploadStarted = false;
-            let processingStarted = false;
+            console.log('isSingleFile:', isSingleFile, 'fileCount:', fileCount);
             
-            // Fallback progress simulation
-            function simulateProgress() {
-                progressTimer = setInterval(() => {
-                    if (!uploadStarted && currentProgress < 25) {
-                        currentProgress += Math.random() * 3;
-                        updateCompressionProgress(
-                            Math.min(currentProgress, 25), 
-                            'Uploading files...', 
-                            `Sending ${fileCount} file${fileCount > 1 ? 's' : ''} to server...`
-                        );
-                    } else if (!processingStarted && currentProgress < 60) {
-                        currentProgress += Math.random() * 2;
-                        updateCompressionProgress(
-                            Math.min(currentProgress, 60), 
-                            'Processing images...', 
-                            `Server processing ${fileCount} image${fileCount > 1 ? 's' : ''}...`
-                        );
-                    } else if (currentProgress < 90) {
-                        currentProgress += Math.random() * 1.5;
-                        updateCompressionProgress(
-                            Math.min(currentProgress, 90), 
-                            'Compressing images...', 
-                            `Optimizing and compressing files...`
-                        );
-                    }
-                    
-                    if (currentProgress >= 90) {
-                        clearInterval(progressTimer);
-                    }
-                }, 300);
-            }
+            // Simple reliable progress tracker
+            let progress = 5;
+            updateCompressionProgress(progress, 'Preparing compression...', 'Initializing image processing');
             
-            // Use XMLHttpRequest for progress tracking
-            const xhr = new XMLHttpRequest();
+            const progressSteps = [
+                { percent: 15, stage: 'Uploading files...', detail: `Sending ${fileCount} file${fileCount > 1 ? 's' : ''} to server...` },
+                { percent: 35, stage: 'Processing images...', detail: `Server received files - starting analysis` },
+                { percent: 55, stage: 'Compressing images...', detail: `Optimizing ${fileCount} image${fileCount > 1 ? 's' : ''}...` },
+                { percent: 75, stage: 'Finalizing compression...', detail: `Applying final optimizations` },
+                { percent: 90, stage: 'Preparing download...', detail: `Getting compressed files ready` }
+            ];
             
-            // Track upload progress
-            xhr.upload.addEventListener('progress', function(e) {
-                uploadStarted = true;
-                if (e.lengthComputable) {
-                    const uploadPercent = 5 + (e.loaded / e.total) * 20; // Upload is 5-25% of total
-                    currentProgress = uploadPercent;
-                    updateCompressionProgress(
-                        uploadPercent, 
-                        'Uploading files...', 
-                        `${Math.round(e.loaded / 1024)} KB of ${Math.round(e.total / 1024)} KB uploaded`
-                    );
+            let stepIndex = 0;
+            const progressInterval = setInterval(() => {
+                if (stepIndex < progressSteps.length) {
+                    const step = progressSteps[stepIndex];
+                    updateCompressionProgress(step.percent, step.stage, step.detail);
+                    stepIndex++;
+                } else {
+                    clearInterval(progressInterval);
                 }
-            });
+            }, 800);
             
-            // Track download progress
-            xhr.addEventListener('progress', function(e) {
-                if (e.lengthComputable) {
-                    const responsePercent = 75 + (e.loaded / e.total) * 20; // Response is 75-95%
-                    currentProgress = responsePercent;
-                    updateCompressionProgress(
-                        responsePercent, 
-                        'Downloading results...', 
-                        `Receiving compressed files...`
-                    );
-                }
-            });
-            
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
-                    processingStarted = true;
-                    clearInterval(progressTimer); // Stop fallback simulation
-                    currentProgress = 30;
-                    updateCompressionProgress(
-                        30, 
-                        'Processing images...', 
-                        `Server received ${fileCount} file${fileCount > 1 ? 's' : ''} - starting compression`
-                    );
-                } else if (xhr.readyState === XMLHttpRequest.LOADING) {
-                    currentProgress = 60;
-                    updateCompressionProgress(
-                        60, 
-                        'Compressing images...', 
-                        `Optimizing ${fileCount} image${fileCount > 1 ? 's' : ''} - reducing file size`
-                    );
-                } else if (xhr.readyState === XMLHttpRequest.DONE) {
-                    clearInterval(progressTimer); // Ensure timer is stopped
-                    currentProgress = 100;
-                    updateCompressionProgress(100, 'Complete!', 'Processing finished successfully');
+            // Use fetch for actual upload
+            console.log('Starting fetch request to /process');
+            fetch('/process', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('Fetch response received:', response);
+                clearInterval(progressInterval);
+                updateCompressionProgress(100, 'Complete!', 'Processing finished successfully');
+                
+                if (response.ok) {
+                    const contentType = response.headers.get('content-type');
                     
-                    if (xhr.status === 200) {
-                        // Handle different response types
-                        const contentType = xhr.getResponseHeader('content-type');
-                        
-                        if (contentType && contentType.includes('application/zip')) {
-                            const blob = new Blob([xhr.response], { type: 'application/zip' });
+                    if (contentType && contentType.includes('application/zip')) {
+                        return response.blob().then(blob => {
                             downloadFile(blob, 'compressed_images.zip');
-                        } else if (contentType && contentType.includes('image/')) {
-                            const blob = new Blob([xhr.response], { type: contentType });
+                        });
+                    } else if (contentType && contentType.includes('image/')) {
+                        return response.blob().then(blob => {
                             const format = formData.get('format') || 'webp';
                             const fileName = isSingleFile && fileInput.files[0] ? 
                                 fileInput.files[0].name.split('.')[0] + '_compressed.' + format :
                                 'compressed_image.' + format;
                             downloadFile(blob, fileName);
-                        } else {
-                            // Handle HTML response (multiple files result page)
-                            document.body.innerHTML = xhr.responseText;
-                        }
-                        
-                        // Hide progress after showing completion
-                        setTimeout(() => {
-                            clearInterval(progressTimer); // Ensure timer is cleared
-                            processProgress.classList.add('hidden');
-                            resetForm();
-                        }, 2000);
+                        });
                     } else {
-                        clearInterval(progressTimer); // Clear timer on error
-                        processProgress.classList.add('hidden');
-                        alert('Error: Compression failed (Status: ' + xhr.status + ')');
-                        resetForm();
+                        return response.text().then(text => {
+                            document.body.innerHTML = text;
+                        });
                     }
+                } else {
+                    throw new Error('Compression failed');
                 }
-            };
-            
-            xhr.onerror = function() {
-                clearInterval(progressTimer); // Stop timer on error
-                processProgress.classList.add('hidden');
-                alert('Error: Network error occurred');
-                resetForm();
-            };
-            
-            // Set response type for binary data
-            xhr.responseType = 'arraybuffer';
-            
-            // Add accept header for proper response handling
-            xhr.open('POST', '/process', true);
-            if (isSingleFile) {
-                xhr.setRequestHeader('Accept', 'application/json, image/*, text/html');
-            }
-            
-            // Start the request with progress tracking
-            updateCompressionProgress(5, 'Preparing compression...', 'Initializing image processing');
-            
-            // Start fallback progress simulation
-            simulateProgress();
-            
-            // Send the request
-            xhr.send(formData);
+            })
+            .catch(error => {
+                console.error('Fetch error:', error);
+                clearInterval(progressInterval);
+                updateCompressionProgress(0, 'Error occurred', 'Compression failed: ' + error.message);
+                alert('Error: ' + error.message);
+            })
+            .finally(() => {
+                setTimeout(() => {
+                    processProgress.classList.add('hidden');
+                    resetForm();
+                }, 2000);
+            });
         }
         
         function downloadFile(blob, filename) {
