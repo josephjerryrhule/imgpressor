@@ -6,16 +6,15 @@
   "scripts": {
     "start": "node app.js",
     "dev": "NODE_ENV=development node app.js",
+    "build": "tailwindcss -i ./src/input.css -o ./public/styles.css --minify",
+    "build:watch": "tailwindcss -i ./src/input.css -o ./public/styles.css --watch",
+    "postinstall": "npm run build",
     "prod": "NODE_ENV=production pm2 start ecosystem.config.js --env production",
     "stop": "pm2 stop ecosystem.config.js",
     "restart": "pm2 restart ecosystem.config.js",
     "delete": "pm2 delete ecosystem.config.js",
     "logs": "pm2 logs imgpressor",
     "monit": "pm2 monit",
-    "deploy": "bash deploy.sh",
-        "build": "tailwindcss -i ./src/input.css -o ./public/styles.css --minify",
-        "build:watch": "tailwindcss -i ./src/input.css -o ./public/styles.css --watch",
-        "postinstall": "npm run build",
     "test": "echo 'No tests specified'",
     "lint": "echo 'No linting configured'"
   },
@@ -52,10 +51,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/imgpressor.git"
+    "url": "https://github.com/josephjerryrhule/imgpressor.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/imgpressor/issues"
+    "url": "https://github.com/josephjerryrhule/imgpressor/issues"
   },
-  "homepage": "https://github.com/yourusername/imgpressor#readme"
+  "homepage": "https://pressor.themewire.co"
 }

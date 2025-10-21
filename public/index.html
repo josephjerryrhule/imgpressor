@@ -243,15 +243,12 @@
         // Form submission with progress
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('Form submitted - filesSelected:', filesSelected, 'uploadComplete:', uploadComplete);
             
             if (!uploadComplete && filesSelected) {
-                console.log('Form submission blocked - upload not complete');
                 alert('Please wait for file upload to complete');
                 return;
             }
             
-            console.log('Form submission proceeding...');
             submitForm();
         });
         
@@ -323,8 +320,6 @@
             uploadComplete = false;
             updateButtonState();
             
-            console.log('Starting upload simulation for', files.length, 'files');
-            
             // Show initial preparation stage
             updateCompressionProgress(5, 'Preparing files', 'Getting files ready for upload...');
             
@@ -339,7 +334,6 @@
                     updateCompressionProgress(100, 'Upload complete', 'Files ready for compression');
                     uploadComplete = true;
                     updateButtonState();
-                    console.log('Upload simulation complete, uploadComplete set to true');
                     
                     // Hide upload progress after a moment
                     setTimeout(() => {
@@ -376,22 +370,14 @@
         }
         
         function submitForm() {
-            console.log('submitForm called'); // Debug log
-            console.log('fileInput.files:', fileInput.files);
-            console.log('urlInput.value:', urlInput.value);
-            console.log('filesSelected:', filesSelected);
-            
             processProgress.classList.remove('hidden');
             compressBtn.disabled = true;
             btnText.textContent = 'Compressing...';
             
             const formData = new FormData(form);
-            console.log('FormData created, entries:', [...formData.entries()]);
             
             const isSingleFile = (filesSelected && fileInput.files.length === 1) || urlInput.value.trim();
             const fileCount = filesSelected ? fileInput.files.length : 1;
-            
-            console.log('isSingleFile:', isSingleFile, 'fileCount:', fileCount);
             
             // Simple reliable progress tracker
             let progress = 5;
@@ -417,13 +403,11 @@
             }, 800);
             
             // Use fetch for actual upload
-            console.log('Starting fetch request to /process');
             fetch('/process', {
                 method: 'POST',
                 body: formData
             })
             .then(response => {
-                console.log('Fetch response received:', response);
                 clearInterval(progressInterval);
                 updateCompressionProgress(100, 'Complete!', 'Processing finished successfully');
                 
@@ -452,7 +436,6 @@
                 }
             })
             .catch(error => {
-                console.error('Fetch error:', error);
                 clearInterval(progressInterval);
                 updateCompressionProgress(0, 'Error occurred', 'Compression failed: ' + error.message);
                 alert('Error: ' + error.message);

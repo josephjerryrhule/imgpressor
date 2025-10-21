@@ -1,15 +1,17 @@
 # Dependencies
 node_modules/
-package-lock.json
 
 # Production files and temp directories
 public/optimized/*
 !public/optimized/.gitkeep
-temp/
+temp/*
+!temp/.gitkeep
 logs/
 
 # Environment and config files
 .env
+.env.local
+.env.production
 
 # Log files
 *.log
@@ -20,20 +22,17 @@ yarn-error.log*
 # OS generated files
 .DS_Store
 Thumbs.db
+.vscode/
 
 # Backup and temporary files
 *.backup
 *.tmp
 *~
 
-# Prevent deployment script clutter (but allow essential ones)
-deploy-digitalocean.sh
-deploy.sh
-forge-deploy.sh
-forge-debug.sh
+# Removed deployment scripts
+force-*.sh
+deploy-with-*.sh
 *-debug.sh
 *-diagnostic.sh
-nginx.conf
-forge-nginx-*.conf
 
 # Note: public/styles.css is intentionally committed for production deployment
