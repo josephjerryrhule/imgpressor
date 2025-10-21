@@ -426,13 +426,6 @@
                     );
                 }
             });
-                    updateCompressionProgress(
-                        responsePercent, 
-                        'Downloading results...', 
-                        `Receiving compressed files...`
-                    );
-                }
-            });
             
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
