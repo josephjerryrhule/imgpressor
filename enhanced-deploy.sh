@@ -14,7 +14,31 @@ export NVM_DIR="$HOME/.nvm"
 
 # Alternative path setup for common Node.js installations
 export PATH="$PATH:/usr/local/bin:/usr/bin:/bin"
-export PATH="$HOME/.nvm/versions/node/$(ls $HOME/.nvm/versions/node/ | tail -1)/bin:$PATH"
+export PATH="$HOME/.nvm/versions/node/$(ls $HOME/.nvm/versions/node/ 2>/dev/null | tail -1)/bin:$PATH" 2>/dev/null || true
+
+# Try to find npm in common locations
+NPM_PATHS=(
+    "/usr/bin/npm"
+    "/usr/local/bin/npm" 
+    "$HOME/.nvm/versions/node/*/bin/npm"
+    "/opt/nodejs/bin/npm"
+)
+
+for npm_path in "${NPM_PATHS[@]}"; do
+    if [ -x "$npm_path" ] || ls $npm_path 1> /dev/null 2>&1; then
+        export PATH="$(dirname $npm_path):$PATH"
+        break
+    fi
+done
+
+# If npm is still not found, try to install/link it
+if ! command -v npm >/dev/null 2>&1; then
+    echo "📦 npm not found, attempting to set up npm..."
+    # Try to use corepack if available (Node.js 16+)
+    if command -v corepack >/dev/null 2>&1; then
+        corepack enable npm
+    fi
+fi
 
 # Verify Node.js and npm are available
 echo "🔍 Checking Node.js installation..."
@@ -43,15 +67,30 @@ if command -v npm >/dev/null 2>&1; then
         npm install --only=production || echo "❌ npm install also failed"
     }
 else
-    echo "❌ npm not available, skipping dependency installation"
+    echo "❌ npm not available, checking if node_modules exists..."
+    if [ -d "node_modules" ]; then
+        echo "✅ node_modules directory exists, skipping install"
+    else
+        echo "⚠️  No node_modules found. App may have missing dependencies."
+    fi
 fi
 
 # Build CSS with error handling  
 echo "🎨 Building CSS..."
 if command -v npm >/dev/null 2>&1; then
     npm run build || echo "⚠️  CSS build failed, using existing styles.css"
+elif command -v npx >/dev/null 2>&1; then
+    echo "📦 Trying to build CSS with npx..."
+    npx tailwindcss -i ./src/input.css -o ./public/styles.css --minify || echo "⚠️  npx CSS build failed"
 else
-    echo "⚠️  npm not available, skipping CSS build"
+    echo "⚠️  npm/npx not available, checking if styles.css exists..."
+    if [ -f "public/styles.css" ]; then
+        echo "✅ styles.css exists, skipping build"
+    else
+        echo "⚠️  No styles.css found. Creating basic fallback..."
+        mkdir -p public
+        echo "/* Fallback CSS - npm build failed */" > public/styles.css
+    fi
 fi
 
 # Create directories with proper permissions
@@ -126,6 +165,22 @@ pm2 list
 
 # Save PM2 configuration
 pm2 save
+
+# Wait a bit more for app to fully initialize
+echo "⏳ Waiting for app to fully initialize..."
+sleep 5
+
+# Check if app is responding
+echo "🔍 Testing app responsiveness..."
+for i in {1..5}; do
+    if curl -s http://localhost:3000 >/dev/null; then
+        echo "✅ App is responding on attempt $i"
+        break
+    else
+        echo "⚠️  App not responding yet, attempt $i/5..."
+        sleep 2
+    fi
+done
 
 # Initial cleanup
 echo "🧹 Running initial cleanup..."
