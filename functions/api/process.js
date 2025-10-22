@@ -1,83 +1,81 @@
 // Cloudflare Pages Function for image processing
 // This replaces the Express.js /process endpoint
 
+// Cloudflare Pages Function for image processing
+// This replaces the Express.js /process endpoint
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   
   try {
+    console.log('Processing POST request to /api/process');
+    
     // Parse the form data
     const formData = await request.formData();
-    const files = formData.getAll('files');
+    const files = formData.getAll('files') || formData.getAll('images');
     const url = formData.get('url');
     const format = formData.get('format') || 'webp';
     const quality = parseInt(formData.get('quality') || '80');
 
+    console.log('Request details:', { 
+      fileCount: files.length, 
+      url: !!url, 
+      format, 
+      quality 
+    });
+
     if (!files.length && !url) {
       return new Response(JSON.stringify({ error: 'No files or URL provided' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
       });
     }
 
+    // For now, return a simple success response to test the endpoint
     const results = [];
-
-    // Process uploaded files
+    
     if (files.length > 0) {
       for (const file of files) {
         if (file.size === 0) continue;
         
-        const result = await processImageCloudflare(file, format, quality);
         results.push({
           name: file.name,
           originalSize: file.size,
-          optimizedSize: result.size,
-          savedBytes: file.size - result.size,
-          savedPercentage: ((file.size - result.size) / file.size * 100).toFixed(2),
+          optimizedSize: Math.round(file.size * 0.7), // Simulate 30% compression
+          savedBytes: Math.round(file.size * 0.3),
+          savedPercentage: "30.00",
           format: format,
-          downloadUrl: result.url
+          downloadUrl: "data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEAD8D+JaQAA3AAAAAA" // Tiny test image
         });
       }
     }
 
-    // Process URL
     if (url) {
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch image: ${response.status}`);
-        }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.startsWith('image/')) {
-          throw new Error('URL does not point to a valid image');
-        }
-
-        const blob = await response.blob();
-        const file = new File([blob], 'url_image.jpg', { type: contentType });
-        
-        const result = await processImageCloudflare(file, format, quality);
-        results.push({
-          name: 'Downloaded Image',
-          originalSize: blob.size,
-          optimizedSize: result.size,
-          savedBytes: blob.size - result.size,
-          savedPercentage: ((blob.size - result.size) / blob.size * 100).toFixed(2),
-          format: format,
-          downloadUrl: result.url
-        });
-      } catch (urlError) {
-        return new Response(JSON.stringify({ error: `URL processing failed: ${urlError.message}` }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+      results.push({
+        name: 'Downloaded Image',
+        originalSize: 100000, // Mock size
+        optimizedSize: 70000,
+        savedBytes: 30000,
+        savedPercentage: "30.00",
+        format: format,
+        downloadUrl: "data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEAD8D+JaQAA3AAAAAA"
+      });
     }
+
+    console.log('Results prepared:', results.length, 'items');
 
     // Return JSON for direct API calls or browser display for form submissions
     const acceptHeader = request.headers.get('accept') || '';
     
     if (acceptHeader.includes('application/json')) {
-      return new Response(JSON.stringify({ results }), {
+      return new Response(JSON.stringify({ 
+        success: true,
+        message: 'Processing complete (test mode)',
+        results 
+      }), {
         status: 200,
         headers: { 
           'Content-Type': 'application/json',
@@ -86,23 +84,20 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Generate HTML response for form submissions
+    // Generate simple HTML response for form submissions
     const totalSaved = results.reduce((sum, r) => sum + r.savedBytes, 0);
     const totalOriginal = results.reduce((sum, r) => sum + r.originalSize, 0);
     const totalPercentage = totalOriginal > 0 ? ((totalSaved / totalOriginal) * 100).toFixed(2) : '0';
 
     const resultItems = results.map(result => `
-      <div class="bg-white p-4 rounded-lg shadow-md">
-        <h3 class="text-lg font-semibold mb-4 text-gray-700">${result.name}</h3>
-        <div class="grid grid-cols-1 gap-4 mb-4">
-          <div>
-            <p class="text-sm text-gray-600 mb-2">Results</p>
-            <p class="text-xs text-gray-500">Original: ${(result.originalSize / 1024).toFixed(2)} KB</p>
-            <p class="text-xs text-gray-500">Optimized: ${(result.optimizedSize / 1024).toFixed(2)} KB</p>
-            <p class="text-sm text-green-600 font-medium">Saved: ${(result.savedBytes / 1024).toFixed(2)} KB (${result.savedPercentage}%)</p>
-          </div>
+      <div style="background: white; padding: 16px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 16px;">
+        <h3 style="margin: 0 0 16px 0; color: #374151;">${result.name}</h3>
+        <div style="margin-bottom: 16px;">
+          <p style="margin: 4px 0; font-size: 14px; color: #6B7280;">Original: ${(result.originalSize / 1024).toFixed(2)} KB</p>
+          <p style="margin: 4px 0; font-size: 14px; color: #6B7280;">Optimized: ${(result.optimizedSize / 1024).toFixed(2)} KB</p>
+          <p style="margin: 4px 0; font-size: 14px; color: #059669; font-weight: 500;">Saved: ${(result.savedBytes / 1024).toFixed(2)} KB (${result.savedPercentage}%)</p>
         </div>
-        <a href="${result.downloadUrl}" download class="mt-2 inline-block bg-green-600 text-white text-sm py-2 px-4 rounded hover:bg-green-700">
+        <a href="${result.downloadUrl}" download="${result.name.split('.')[0]}_compressed.${result.format}" style="display: inline-block; background: #059669; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 14px;">
           Download ${result.format.toUpperCase()}
         </a>
       </div>
@@ -114,27 +109,38 @@ export async function onRequestPost(context) {
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Compression Results - ImgPressor</title>
-        <script src="https://cdn.tailwindcss.com"></script>
+        <title>Test Results - ImgPressor</title>
+        <style>
+          body { font-family: Arial, sans-serif; background: #f3f4f6; padding: 32px 16px; margin: 0; }
+          .container { max-width: 1200px; margin: 0 auto; }
+          .header { text-align: center; margin-bottom: 32px; }
+          .title { font-size: 32px; font-weight: bold; color: #1f2937; margin-bottom: 16px; }
+          .summary { background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; margin-bottom: 32px; }
+          .summary h2 { margin: 0 0 16px 0; font-size: 24px; color: #1f2937; }
+          .summary p { margin: 8px 0; font-size: 18px; }
+          .results { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 32px; }
+          .back-button { display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; }
+          .center { text-align: center; }
+        </style>
       </head>
-      <body class="bg-gray-100 min-h-screen py-8">
-        <div class="max-w-6xl mx-auto px-4">
-          <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Images Compressed Successfully!</h1>
-          
-          <div class="bg-white p-6 rounded-lg shadow-md text-center mb-8">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Total Results</h2>
-            <p class="text-lg"><strong>Total Space Saved:</strong> ${(totalSaved / 1024).toFixed(2)} KB</p>
-            <p class="text-lg"><strong>Average Savings:</strong> ${totalPercentage}%</p>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 class="title">Test Compression Complete!</h1>
           </div>
           
-          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div class="summary">
+            <h2>Total Results (Test Mode)</h2>
+            <p><strong>Total Space Saved:</strong> ${(totalSaved / 1024).toFixed(2)} KB</p>
+            <p><strong>Average Savings:</strong> ${totalPercentage}%</p>
+          </div>
+          
+          <div class="results">
             ${resultItems}
           </div>
           
-          <div class="text-center">
-            <a href="/" class="bg-blue-600 text-white py-2 px-6 rounded hover:bg-blue-700">
-              Compress More Images
-            </a>
+          <div class="center">
+            <a href="/" class="back-button">Test More Images</a>
           </div>
         </div>
       </body>
@@ -143,57 +149,24 @@ export async function onRequestPost(context) {
 
     return new Response(resultHtml, {
       status: 200,
-      headers: { 'Content-Type': 'text/html' }
+      headers: { 
+        'Content-Type': 'text/html',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
 
   } catch (error) {
     console.error('Processing error:', error);
-    return new Response(JSON.stringify({ error: `Processing failed: ${error.message}` }), {
+    return new Response(JSON.stringify({ 
+      error: `Processing failed: ${error.message}`,
+      stack: error.stack
+    }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
     });
-  }
-}
-
-// Image processing function using Canvas API (available in Cloudflare Workers)
-async function processImageCloudflare(file, format = 'webp', quality = 80) {
-  try {
-    // Create an image bitmap from the file
-    const bitmap = await createImageBitmap(file);
-    
-    // Calculate new dimensions (reduce by factor for compression)
-    const scaleFactor = 0.8; // Reduce size by 20% for compression
-    const newWidth = Math.round(bitmap.width * scaleFactor);
-    const newHeight = Math.round(bitmap.height * scaleFactor);
-    
-    // Create an offscreen canvas
-    const canvas = new OffscreenCanvas(newWidth, newHeight);
-    const ctx = canvas.getContext('2d');
-    
-    // Draw and resize the image
-    ctx.drawImage(bitmap, 0, 0, newWidth, newHeight);
-    
-    // Convert to the desired format
-    const outputFormat = format === 'jpg' ? 'jpeg' : format;
-    const qualityValue = quality / 100;
-    
-    const blob = await canvas.convertToBlob({
-      type: `image/${outputFormat}`,
-      quality: qualityValue
-    });
-    
-    // Convert blob to data URL for download
-    const arrayBuffer = await blob.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-    const dataUrl = `data:image/${outputFormat};base64,${base64}`;
-    
-    return {
-      size: blob.size,
-      url: dataUrl
-    };
-    
-  } catch (error) {
-    throw new Error(`Image processing failed: ${error.message}`);
   }
 }
 
