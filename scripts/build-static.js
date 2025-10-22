@@ -47,22 +47,31 @@ copyDirectory(publicDir, distDir);
 const indexPath = path.join(distDir, 'index.html');
 let indexContent = fs.readFileSync(indexPath, 'utf8');
 
-// Replace the API endpoint based on environment
-const isDevelopment = process.env.NODE_ENV === 'development';
-const apiEndpoint = isDevelopment ? 'http://localhost:3000' : 'https://imgpressor.pages.dev';
-
-// Add API configuration to the HTML
+// Replace the API configuration for Pages deployment
 const configScript = `
 <script>
   window.IMGPRESSOR_CONFIG = {
-    API_URL: '${apiEndpoint}',
-    ENVIRONMENT: '${isDevelopment ? 'development' : 'production'}',
-    USE_PAGES_FUNCTIONS: ${!isDevelopment}
+    API_URL: '',  // Use same origin for Pages
+    ENVIRONMENT: 'production',
+    USE_PAGES_FUNCTIONS: true  // Enable Pages Functions routing
   };
 </script>`;
 
-// Insert config before closing head tag
-indexContent = indexContent.replace('</head>', configScript + '\n</head>');
+// Replace existing config script or insert before closing head tag
+if (indexContent.includes('window.IMGPRESSOR_CONFIG')) {
+  indexContent = indexContent.replace(
+    /<script>[\s\S]*?window\.IMGPRESSOR_CONFIG[\s\S]*?<\/script>/,
+    configScript
+  );
+} else {
+  indexContent = indexContent.replace('</head>', configScript + '\n</head>');
+}
+
+// Update form action to use /api/process for Pages Functions
+indexContent = indexContent.replace(
+  'action="/process"',
+  'action="/api/process"'
+);
 
 // Add note about Pages deployment
 const deploymentNote = `
