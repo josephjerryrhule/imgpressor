@@ -79,21 +79,6 @@
       ENVIRONMENT: 'development',
       USE_PAGES_FUNCTIONS: false
     };
-    
-    // Helper function to get API endpoint
-    function getApiEndpoint(path = '') {
-      const config = window.IMGPRESSOR_CONFIG;
-      if (config.USE_PAGES_FUNCTIONS) {
-        // For Cloudflare Pages, use /api/* routes
-        return `/api${path}`;
-      } else if (config.API_URL) {
-        // For external API
-        return `${config.API_URL}${path}`;
-      } else {
-        // For same-origin (traditional deployment)
-        return path;
-      }
-    }
     </script>
     
     <link rel="stylesheet" href="/styles.css?v=2.0">
@@ -428,7 +413,15 @@
             }, 800);
             
             // Use fetch for actual upload
-            const apiEndpoint = getApiEndpoint('/process');
+            const config = window.IMGPRESSOR_CONFIG;
+            let apiEndpoint = '/process'; // Default for traditional deployment
+            
+            if (config && config.USE_PAGES_FUNCTIONS) {
+                apiEndpoint = '/api/process'; // Cloudflare Pages
+            } else if (config && config.API_URL) {
+                apiEndpoint = config.API_URL + '/process'; // External API
+            }
+            
             fetch(apiEndpoint, {
                 method: 'POST',
                 body: formData
