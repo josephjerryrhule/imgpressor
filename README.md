@@ -28,7 +28,18 @@ npm run build
 npm run dev
 ```
 
-### Production
+### Production Deployment
+
+#### Option 1: Cloudflare Pages (Global CDN)
+```bash
+# Build for Cloudflare Pages
+npm run build:pages
+
+# Deploy (with Wrangler CLI)
+npm run deploy:pages
+```
+
+#### Option 2: Traditional Server
 ```bash
 # Build optimized version
 npm run build
@@ -36,6 +47,8 @@ npm run build
 # Start production server  
 npm start
 ```
+
+For detailed deployment instructions, see [CLOUDFLARE-DEPLOYMENT.md](./CLOUDFLARE-DEPLOYMENT.md)
 
 ## 📁 Project Structure
 

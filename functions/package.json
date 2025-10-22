@@ -1,0 +1,11 @@
+{
+  "name": "imgpressor-functions",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@squoosh/lib": "^0.5.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

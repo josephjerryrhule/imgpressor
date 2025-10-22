@@ -1,5 +1,10 @@
 # Dependencies
 node_modules/
+functions/node_modules/
+
+# Build outputs
+dist/
+.wrangler/
 
 # Production files and temp directories
 public/optimized/*
