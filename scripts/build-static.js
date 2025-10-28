@@ -92,7 +92,7 @@ console.log('🚀 Ready for Cloudflare Pages deployment');
 // Create _routes.json for Cloudflare Pages routing
 const routesConfig = {
   version: 1,
-  include: ["/api/*"],
+  include: ["/api/*", "/process", "/hello", "/debug"],
   exclude: ["/*"]
 };
 
