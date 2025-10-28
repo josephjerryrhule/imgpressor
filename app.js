@@ -133,13 +133,117 @@ async function downloadImage(url) {
     }
 }
 
-// Helper function to optimize image with format support
-async function optimizeImage(buffer, quality = 80, format = 'webp') {
+// Helper function to process image in memory using Canvas API (unified approach)
+async function processImageInMemory(buffer, quality = 80, format = 'webp') {
+    try {
+        // Create an image bitmap from the buffer
+        const arrayBuffer = buffer instanceof ArrayBuffer ? buffer : buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+        const blob = new Blob([arrayBuffer]);
+        const imageBitmap = await createImageBitmap(blob);
+        
+        // Calculate new dimensions (reduce by 1.5x for compression)
+        const newWidth = Math.round(imageBitmap.width / 1.5);
+        const newHeight = Math.round(imageBitmap.height / 1.5);
+        
+        // Create canvas and draw the resized image
+        const canvas = new OffscreenCanvas(newWidth, newHeight);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(imageBitmap, 0, 0, newWidth, newHeight);
+        
+        // Convert quality percentage to 0-1 range
+        const qualityValue = Math.max(0.1, Math.min(1.0, quality / 100));
+        
+        // Convert to desired format
+        let outputBlob;
+        switch (format.toLowerCase()) {
+            case 'jpeg':
+            case 'jpg':
+                outputBlob = await canvas.convertToBlob({
+                    type: 'image/jpeg',
+                    quality: qualityValue
+                });
+                format = 'jpeg';
+                break;
+            case 'png':
+                outputBlob = await canvas.convertToBlob({
+                    type: 'image/png'
+                });
+                format = 'png';
+                break;
+            case 'webp':
+            default:
+                outputBlob = await canvas.convertToBlob({
+                    type: 'image/webp',
+                    quality: qualityValue
+                });
+                format = 'webp';
+                break;
+        }
+        
+        // Convert blob to array buffer
+        const outputArrayBuffer = await outputBlob.arrayBuffer();
+        
+        // Clean up
+        imageBitmap.close();
+        
+        return {
+            buffer: outputArrayBuffer,
+            format: format
+        };
+    } catch (error) {
+        throw new Error(`Image processing failed: ${error.message}`);
+    }
+}
+
+// Helper function to process image for server response (matches existing interface)
+async function processImageInMemory(buffer, filename, quality, format = 'webp', url = null) {
+    const originalSize = buffer.length;
+    
+    // Process image using Canvas API
+    const processed = await processImageInMemoryBase(buffer, quality, format);
+    const optimizedBuffer = Buffer.from(processed.buffer);
+    const outputFormat = processed.format;
+    const optimizedSize = optimizedBuffer.length;
+    
+    // Create data URL for download (no file storage)
+    const base64Data = optimizedBuffer.toString('base64');
+    const mimeType = `image/${outputFormat}`;
+    const downloadUrl = `data:${mimeType};base64,${base64Data}`;
+    
+    // Create original preview data URL
+    let originalPreview;
+    if (url) {
+        originalPreview = url;
+    } else {
+        const originalBase64 = buffer.toString('base64');
+        const originalMimeType = 'image/jpeg'; // Default
+        originalPreview = `data:${originalMimeType};base64,${originalBase64}`;
+    }
+    
+    // Calculate savings
+    const savedBytes = originalSize - optimizedSize;
+    const savedPercentage = ((savedBytes / originalSize) * 100).toFixed(2);
+    
+    return {
+        name: filename,
+        originalPreview,
+        optimizedFilename: `${filename.split('.')[0]}_compressed.${outputFormat}`, // For display only
+        originalSize,
+        optimizedSize,
+        savedBytes,
+        savedPercentage,
+        format: outputFormat,
+        downloadUrl // Data URL for immediate download
+    };
+}
+
+// Helper function to process image in memory using Sharp (unified approach for server)
+async function processImageInMemoryBase(buffer, quality = 80, format = 'webp') {
     try {
         // Get metadata
         const metadata = await sharp(buffer).metadata();
         
-        // Calculate new height (original / 1.5) for faster processing
+        // Calculate new dimensions (reduce by 1.5x for compression)
         const newHeight = Math.round(metadata.height / 1.5);
         
         // Start with resize - use faster algorithms for better performance
@@ -180,6 +284,7 @@ async function optimizeImage(buffer, quality = 80, format = 'webp') {
                     mozjpeg: false, // Use faster libjpeg instead of mozjpeg
                     optimiseScans: false // Skip scan optimization for speed
                 });
+                format = 'jpeg';
                 break;
                 
             case 'png':
@@ -203,9 +308,12 @@ async function optimizeImage(buffer, quality = 80, format = 'webp') {
         
         const optimizedBuffer = await pipeline.toBuffer();
         
-        return { buffer: optimizedBuffer, format: format };
+        return {
+            buffer: optimizedBuffer,
+            format: format
+        };
     } catch (error) {
-        throw new Error(`Image optimization failed: ${error.message}`);
+        throw new Error(`Image processing failed: ${error.message}`);
     }
 }
 
@@ -284,15 +392,15 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
         console.log('Processing with format:', format, 'quality:', quality);
         
         if (req.files && req.files.length > 0) {
-            // Process uploaded files
+            // Process uploaded files using Canvas API (no file storage)
             for (const file of req.files) {
-                const result = await processImage(file.buffer, file.originalname, quality, format);
+                const result = await processImageInMemory(file.buffer, file.originalname, quality, format);
                 results.push(result);
             }
         } else if (req.body.url) {
-            // Process URL
+            // Process URL using Canvas API
             const originalBuffer = await downloadImage(req.body.url);
-            const result = await processImage(originalBuffer, 'url_image.jpg', quality, format, req.body.url);
+            const result = await processImageInMemory(originalBuffer, 'url_image.jpg', quality, format, req.body.url);
             results.push(result);
         } else {
             return res.status(400).send('<h1>Error: Please provide images or a URL.</h1><a href="/">Go back</a>');
@@ -301,22 +409,22 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
         // Handle single file direct download if requested via AJAX
         if (req.headers.accept && req.headers.accept.includes('application/json') && results.length === 1) {
             const result = results[0];
-            const filePath = path.join(__dirname, 'public', 'optimized', result.optimizedFilename);
             
-            if (fs.existsSync(filePath)) {
-                const fileBuffer = fs.readFileSync(filePath);
-                const mimeTypes = {
-                    'webp': 'image/webp',
-                    'avif': 'image/avif', 
-                    'jpeg': 'image/jpeg',
-                    'jpg': 'image/jpeg',
-                    'png': 'image/png'
-                };
-                
-                res.setHeader('Content-Type', mimeTypes[result.format] || 'image/webp');
-                res.setHeader('Content-Disposition', `attachment; filename="${result.name.split('.')[0]}_compressed.${result.format}"`);
-                return res.send(fileBuffer);
-            }
+            // Return the compressed image directly as binary data
+            const base64Data = result.downloadUrl.split(',')[1];
+            const imageBuffer = Buffer.from(base64Data, 'base64');
+            
+            const mimeTypes = {
+                'webp': 'image/webp',
+                'avif': 'image/avif', 
+                'jpeg': 'image/jpeg',
+                'jpg': 'image/jpeg',
+                'png': 'image/png'
+            };
+            
+            res.setHeader('Content-Type', mimeTypes[result.format] || 'image/webp');
+            res.setHeader('Content-Disposition', `attachment; filename="${result.name.split('.')[0]}_compressed.${result.format}"`);
+            return res.send(imageBuffer);
         }
         
         // Generate result page
@@ -331,12 +439,12 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
                     </div>
                     <div>
                         <p class="text-sm text-gray-600 mb-2">Optimized (${result.format?.toUpperCase() || 'WebP'})</p>
-                        <img src="/optimized/${result.optimizedFilename}" alt="Optimized" class="w-full h-32 object-cover rounded-lg">
+                        <img src="${result.downloadUrl}" alt="Optimized" class="w-full h-32 object-cover rounded-lg">
                         <p class="text-xs text-gray-500 mt-1">${(result.optimizedSize / 1024).toFixed(2)} KB</p>
                     </div>
                 </div>
                 <p class="text-sm text-green-600 font-medium">Saved: ${(result.savedBytes / 1024).toFixed(2)} KB (${result.savedPercentage}%)</p>
-                <a href="/optimized/${result.optimizedFilename}" download class="mt-2 inline-block btn-success text-sm py-2 px-4">
+                <a href="${result.downloadUrl}" download="${result.optimizedFilename}" class="mt-2 inline-block btn-success text-sm py-2 px-4">
                     Download
                 </a>
             </div>
@@ -405,7 +513,144 @@ app.post('/process', upload.array('images', 10), async (req, res) => {
     }
 });
 
-// Download all route
+// Alias route for Cloudflare Pages compatibility - use same handler
+app.post('/api/process', upload.array('images', 10), async (req, res) => {
+    console.log('POST /api/process - Request received (redirecting to main handler)');
+    console.log('Files:', req.files ? req.files.length : 0);
+    console.log('Body URL:', req.body.url || 'none');
+    
+    try {
+        const quality = req.body.quality || 80;
+        const format = req.body.format || 'webp';
+        let results = [];
+        
+        console.log('Processing with format:', format, 'quality:', quality);
+        
+        if (req.files && req.files.length > 0) {
+            // Process uploaded files using Canvas API (no file storage)
+            for (const file of req.files) {
+                const result = await processImageInMemory(file.buffer, file.originalname, quality, format);
+                results.push(result);
+            }
+        } else if (req.body.url) {
+            // Process URL using Canvas API
+            const originalBuffer = await downloadImage(req.body.url);
+            const result = await processImageInMemory(originalBuffer, 'url_image.jpg', quality, format, req.body.url);
+            results.push(result);
+        } else {
+            return res.status(400).send('<h1>Error: Please provide images or a URL.</h1><a href="/">Go back</a>');
+        }
+        
+        // Handle single file direct download if requested via AJAX
+        if (req.headers.accept && req.headers.accept.includes('application/json') && results.length === 1) {
+            const result = results[0];
+            
+            // Return the compressed image directly as binary data
+            const base64Data = result.downloadUrl.split(',')[1];
+            const imageBuffer = Buffer.from(base64Data, 'base64');
+            
+            const mimeTypes = {
+                'webp': 'image/webp',
+                'avif': 'image/avif', 
+                'jpeg': 'image/jpeg',
+                'jpg': 'image/jpeg',
+                'png': 'image/png'
+            };
+            
+            res.setHeader('Content-Type', mimeTypes[result.format] || 'image/webp');
+            res.setHeader('Content-Disposition', `attachment; filename="${result.name.split('.')[0]}_compressed.${result.format}"`);
+            return res.send(imageBuffer);
+        }
+        
+        // Generate result page
+        const resultItems = results.map(result => `
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">${result.name}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-2">Original</p>
+                        <img src="${result.originalPreview}" alt="Original" class="w-full h-32 object-cover rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1">${(result.originalSize / 1024).toFixed(2)} KB</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 mb-2">Optimized (${result.format?.toUpperCase() || 'WebP'})</p>
+                        <img src="${result.downloadUrl}" alt="Optimized" class="w-full h-32 object-cover rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1">${(result.optimizedSize / 1024).toFixed(2)} KB</p>
+                    </div>
+                </div>
+                <p class="text-sm text-green-600 font-medium">Saved: ${(result.savedBytes / 1024).toFixed(2)} KB (${result.savedPercentage}%)</p>
+                <a href="${result.downloadUrl}" download="${result.optimizedFilename}" class="mt-2 inline-block btn-success text-sm py-2 px-4">
+                    Download
+                </a>
+            </div>
+        `).join('');
+        
+        const totalSaved = results.reduce((sum, r) => sum + r.savedBytes, 0);
+        const totalOriginal = results.reduce((sum, r) => sum + r.originalSize, 0);
+        const totalPercentage = ((totalSaved / totalOriginal) * 100).toFixed(2);
+        
+        // Create session ID for download all functionality
+        const sessionId = crypto.randomBytes(16).toString('hex');
+        
+        // Store results in temporary file for download all
+        const tempDir = path.join(__dirname, 'temp');
+        if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+        }
+        
+        const tempFilePath = path.join(tempDir, `${sessionId}.json`);
+        fs.writeFileSync(tempFilePath, JSON.stringify(results, null, 2));
+        
+        // Download all button (only show if multiple files)
+        const downloadAllButton = results.length > 1 ? `
+            <a href="/download-all/${sessionId}" class="btn-purple inline-block mr-4 py-2 px-6">
+                Download All as ZIP
+            </a>
+        ` : '';
+        
+        const resultHtml = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Compression Results</title>
+                <link rel="stylesheet" href="/styles.css">
+            </head>
+            <body class="bg-gray-100 min-h-screen py-8">
+                <div class="max-w-6xl mx-auto px-4">
+                    <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Images Compressed Successfully!</h1>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center mb-8">
+                        <h2 class="text-2xl font-semibold mb-4 text-gray-800">Total Results</h2>
+                        <p class="text-lg"><strong>Total Space Saved:</strong> ${(totalSaved / 1024).toFixed(2)} KB</p>
+                        <p class="text-lg"><strong>Average Savings:</strong> ${totalPercentage}%</p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        ${resultItems}
+                    </div>
+                    
+                    <div class="text-center">
+                        ${downloadAllButton}
+                        <a href="/" class="btn-primary inline-block py-2 px-6">
+                            Compress More Images
+                        </a>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+        
+        res.send(resultHtml);
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).send(`<h1>Error: ${error.message}</h1><a href="/">Go back</a>`);
+    }
+});
+
+// Download all route (updated for Canvas API approach)
 app.get('/download-all/:sessionId', async (req, res) => {
     try {
         const sessionId = req.params.sessionId;
@@ -437,11 +682,15 @@ app.get('/download-all/:sessionId', async (req, res) => {
         // Pipe archive to response
         archive.pipe(res);
         
-        // Add each optimized image to the archive
+        // Add each optimized image to the archive from data URLs
         for (const result of results) {
-            const filePath = path.join(__dirname, 'public', 'optimized', result.optimizedFilename);
-            if (fs.existsSync(filePath)) {
-                archive.file(filePath, { name: result.optimizedFilename });
+            if (result.downloadUrl && result.downloadUrl.startsWith('data:')) {
+                // Extract base64 data from data URL
+                const base64Data = result.downloadUrl.split(',')[1];
+                const buffer = Buffer.from(base64Data, 'base64');
+                
+                // Add buffer to archive
+                archive.append(buffer, { name: result.optimizedFilename });
             }
         }
         
@@ -461,43 +710,10 @@ app.get('/download-all/:sessionId', async (req, res) => {
     }
 });
 
-// Helper function to process a single image
+// Helper function to process a single image (updated for Canvas API)
 async function processImage(buffer, filename, quality, format = 'webp', url = null) {
-    const originalSize = buffer.length;
-    
-    // Optimize image
-    const optimized = await optimizeImage(buffer, quality, format);
-    const optimizedBuffer = optimized.buffer;
-    const outputFormat = optimized.format;
-    const optimizedSize = optimizedBuffer.length;
-    
-    // Save optimized image with original name but new extension
-    const optimizedFilename = saveBuffer(optimizedBuffer, filename, outputFormat);
-    
-    // Save original for preview if from upload
-    let originalPreview;
-    if (url) {
-        originalPreview = url;
-    } else {
-        const ext = path.extname(filename).slice(1) || 'jpg';
-        const originalFilename = saveBuffer(buffer, filename, ext);
-        originalPreview = `/optimized/${originalFilename}`;
-    }
-    
-    // Calculate savings
-    const savedBytes = originalSize - optimizedSize;
-    const savedPercentage = ((savedBytes / originalSize) * 100).toFixed(2);
-    
-    return {
-        name: filename,
-        originalPreview,
-        optimizedFilename,
-        originalSize,
-        optimizedSize,
-        savedBytes,
-        savedPercentage,
-        format: outputFormat
-    };
+    // Use the Canvas API processing function directly
+    return await processImageInMemory(buffer, filename, quality, format, url);
 }
 
 // Error handling middleware
@@ -510,6 +726,7 @@ app.use((req, res, next) => {
         <ul>
             <li>GET / - Main page</li>
             <li>POST /process - Image processing</li>
+            <li>POST /api/process - Image processing (Cloudflare Pages compatibility)</li>
             <li>GET /health - Health check</li>
             <li>GET /test - Server test</li>
             <li>GET /download-all/:sessionId - Download all files</li>
@@ -590,7 +807,9 @@ const { execSync } = require('child_process');
 class StorageMonitor {
     static getDiskUsage() {
         try {
-            const output = execSync('df -h /home/forge/pressor.themewire.co', { encoding: 'utf8' });
+            // Use current working directory as a more portable approach
+            const targetPath = process.cwd();
+            const output = execSync(`df -h "${targetPath}"`, { encoding: 'utf8' });
             const lines = output.trim().split('\n');
             const dataLine = lines[1].split(/\s+/);
             
@@ -602,7 +821,12 @@ class StorageMonitor {
             };
         } catch (error) {
             console.error('Error getting disk usage:', error.message);
-            return null;
+            return {
+                total: 'Unknown',
+                used: 'Unknown', 
+                available: 'Unknown',
+                percentage: 0
+            };
         }
     }
     
@@ -780,6 +1004,7 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`Available routes:`);
     console.log(`  GET  / - Main page`);
     console.log(`  POST /process - Image processing`);
+    console.log(`  POST /api/process - Image processing (Cloudflare Pages compatibility)`);
     console.log(`  GET  /health - Health check`);
     console.log(`  GET  /storage-status - Storage monitoring`);
     console.log(`  GET  /download-all/:sessionId - Download ZIP`);
