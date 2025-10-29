@@ -62,8 +62,12 @@ app.use((req, res, next) => {
 });
 
 // Middleware
+// Determine static directory - use dist if it exists (built), otherwise public
+const staticDir = fs.existsSync(path.join(__dirname, 'dist')) ? 'dist' : 'public';
+console.log(`📁 Serving static files from: ${staticDir}/`);
+
 // Cache-busting for static files during development/updates
-app.use(express.static('public', {
+app.use(express.static(staticDir, {
     etag: true,
     lastModified: true,
     setHeaders: (res, path) => {

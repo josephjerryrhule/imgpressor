@@ -17,30 +17,33 @@ npm cache clean --force 2>/dev/null || true
 echo "📦 Installing dependencies..."
 npm ci --only=production || npm install --only=production
 
-# Build CSS for traditional server (not Pages build)
-echo "🎨 Building CSS..."
-npm run build
+# Build complete deployment package for traditional server
+echo "🎨 Building complete deployment package..."
+npm run build:traditional
 
-# Ensure we're using the correct files (not Cloudflare Pages build)
-echo "🔧 Ensuring traditional server files..."
-if [ -f "dist/index.html" ]; then
-    echo "⚠️  Removing Cloudflare Pages build to avoid conflicts..."
-    rm -rf dist/
-fi
-
-# Verify form action is correct for traditional server
-if grep -q 'action="/process"' public/index.html; then
-    echo "✅ Traditional server form action verified"
+# Verify the deployment package
+echo "🔧 Verifying deployment package..."
+if [ -f "dist/app.js" ] && [ -f "dist/index.html" ] && [ -f "dist/package.json" ]; then
+    if grep -q 'USE_PAGES_FUNCTIONS: false' dist/index.html; then
+        echo "✅ Complete deployment package verified"
+        echo "📦 Package contains: Frontend + Backend + Config"
+    else
+        echo "⚠️  Warning: Package may contain wrong build type"
+    fi
 else
-    echo "⚠️  Form action may be incorrect for traditional server"
+    echo "❌ Incomplete deployment package - missing essential files"
+    exit 1
 fi
+
+# Change to dist directory for deployment
+cd dist
 
 # Create required directories
-mkdir -p public/optimized temp logs
-chmod 755 public public/optimized temp logs
+mkdir -p temp logs
+chmod 755 temp logs
 
-# Start application
-echo "� Starting application..."
+# Start application from deployment package
+echo "🚀 Starting application..."
 NODE_ENV=production pm2 start ecosystem.config.js --env production --name imgpressor
 pm2 save
 

@@ -30,22 +30,34 @@ npm run dev
 
 ### Production Deployment
 
-#### Option 1: Cloudflare Pages (Global CDN)
+#### Option 1: Auto-Deploy from GitHub Releases (Recommended)
+```bash
+# One-line installer (downloads and deploys latest release)
+curl -sSL https://raw.githubusercontent.com/josephjerryrhule/imgpressor/master/scripts/install.sh | bash
+
+# Or with wget
+wget -qO- https://raw.githubusercontent.com/josephjerryrhule/imgpressor/master/scripts/install.sh | bash
+
+# Manual deployment with auto-deploy script
+curl -sSL https://raw.githubusercontent.com/josephjerryrhule/imgpressor/master/scripts/auto-deploy.sh | bash
+```
+
+#### Option 2: Build and Deploy Manually
+```bash
+# Build complete deployment package
+npm run build:traditional
+
+# The dist/ folder contains everything needed for deployment
+cd dist && npm start
+```
+
+#### Option 3: Cloudflare Pages (Global CDN)
 ```bash
 # Build for Cloudflare Pages
 npm run build:pages
 
 # Deploy (with Wrangler CLI)
 npm run deploy:pages
-```
-
-#### Option 2: Traditional Server
-```bash
-# Build optimized version
-npm run build
-
-# Start production server  
-npm start
 ```
 
 For detailed deployment instructions, see [CLOUDFLARE-DEPLOYMENT.md](./CLOUDFLARE-DEPLOYMENT.md)

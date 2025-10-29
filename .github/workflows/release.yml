@@ -1,0 +1,93 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build deployment package
+      run: npm run build:traditional
+      
+    - name: Create deployment archive
+      run: |
+        cd dist
+        zip -r ../imgpressor-deployment-${{ github.ref_name || github.event.inputs.version }}.zip .
+        cd ..
+        
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        VERSION=${{ github.ref_name || github.event.inputs.version }}
+        echo "## 🚀 ImgPressor ${VERSION}" > release_notes.md
+        echo "" >> release_notes.md
+        echo "### 📦 Complete Deployment Package" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "This release contains a complete, self-contained deployment package for traditional servers." >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### 🎯 What's Included:" >> release_notes.md
+        echo "- ✅ Frontend files (HTML, CSS, assets)" >> release_notes.md
+        echo "- ✅ Backend server (Express.js)" >> release_notes.md
+        echo "- ✅ All dependencies pre-installed" >> release_notes.md
+        echo "- ✅ Configuration files" >> release_notes.md
+        echo "- ✅ PM2 ecosystem config" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### 🚀 Quick Deploy:" >> release_notes.md
+        echo "\`\`\`bash" >> release_notes.md
+        echo "# Download and extract" >> release_notes.md
+        echo "wget https://github.com/josephjerryrhule/imgpressor/releases/download/${VERSION}/imgpressor-deployment-${VERSION}.zip" >> release_notes.md
+        echo "unzip imgpressor-deployment-${VERSION}.zip -d imgpressor" >> release_notes.md
+        echo "cd imgpressor" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "# Start the application" >> release_notes.md
+        echo "npm start" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "# Or with PM2" >> release_notes.md
+        echo "pm2 start ecosystem.config.js" >> release_notes.md
+        echo "\`\`\`" >> release_notes.md
+        echo "" >> release_notes.md
+        echo "### 🌐 Access:" >> release_notes.md
+        echo "Visit \`http://your-server:3000\` to start compressing images!" >> release_notes.md
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name || github.event.inputs.version }}
+        name: ImgPressor ${{ github.ref_name || github.event.inputs.version }}
+        body_path: release_notes.md
+        files: |
+          imgpressor-deployment-${{ github.ref_name || github.event.inputs.version }}.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-package-${{ github.ref_name || github.event.inputs.version }}
+        path: |
+          imgpressor-deployment-${{ github.ref_name || github.event.inputs.version }}.zip
+          dist/
