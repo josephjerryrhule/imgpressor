@@ -17,9 +17,23 @@ npm cache clean --force 2>/dev/null || true
 echo "📦 Installing dependencies..."
 npm ci --only=production || npm install --only=production
 
-# Build assets
-echo "🎨 Building assets..."
+# Build CSS for traditional server (not Pages build)
+echo "🎨 Building CSS..."
 npm run build
+
+# Ensure we're using the correct files (not Cloudflare Pages build)
+echo "🔧 Ensuring traditional server files..."
+if [ -f "dist/index.html" ]; then
+    echo "⚠️  Removing Cloudflare Pages build to avoid conflicts..."
+    rm -rf dist/
+fi
+
+# Verify form action is correct for traditional server
+if grep -q 'action="/process"' public/index.html; then
+    echo "✅ Traditional server form action verified"
+else
+    echo "⚠️  Form action may be incorrect for traditional server"
+fi
 
 # Create required directories
 mkdir -p public/optimized temp logs
