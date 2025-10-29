@@ -10,12 +10,6 @@ echo "🧹 Clearing caches..."
 pm2 delete all 2>/dev/null || true
 pm2 kill 2>/dev/null || true
 
-# Clear system caches if available
-if command -v php >/dev/null 2>&1; then
-    php artisan cache:clear 2>/dev/null || true
-    php artisan config:clear 2>/dev/null || true
-fi
-
 # Clear Node.js cache
 npm cache clean --force 2>/dev/null || true
 
@@ -43,7 +37,7 @@ sleep 5
 echo "🔍 Testing application..."
 if curl -s http://localhost:3000/health >/dev/null; then
     echo "✅ Application is running successfully!"
-    echo "🌐 URL: https://$(hostname -f 2>/dev/null || echo "your-domain.com")"
+    echo "🌐 App is running on port 3000"
     
     # Show current version
     VERSION=$(curl -s http://localhost:3000/health 2>/dev/null | grep -o '"version":"[^"]*"' | cut -d'"' -f4)
