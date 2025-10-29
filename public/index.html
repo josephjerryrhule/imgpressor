@@ -414,10 +414,12 @@
             
             // Use fetch for actual upload
             const config = window.IMGPRESSOR_CONFIG;
-            let apiEndpoint = '/api/process'; // Use API path for Pages Functions
+            let apiEndpoint = '/process'; // Default for traditional servers
             
-            if (config && config.API_URL) {
-                apiEndpoint = config.API_URL + '/api/process'; // External API
+            if (config && config.USE_PAGES_FUNCTIONS) {
+                apiEndpoint = '/api/process'; // Use API path for Pages Functions
+            } else if (config && config.API_URL) {
+                apiEndpoint = config.API_URL + '/process'; // External API
             }
             
             console.log('Using API endpoint:', apiEndpoint);
