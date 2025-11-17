@@ -1,0 +1,135 @@
+.wp-imgpressor-settings {
+    max-width: 1200px;
+}
+
+.wp-imgpressor-stats {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.wp-imgpressor-stats h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: #f6f7f7;
+    border-radius: 4px;
+    padding: 20px;
+    text-align: center;
+}
+
+.stat-card h3 {
+    margin: 0 0 5px 0;
+    font-size: 32px;
+    color: #2271b1;
+}
+
+.stat-card p {
+    margin: 0;
+    color: #646970;
+    font-size: 14px;
+}
+
+.wp-imgpressor-form {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+.quality-slider {
+    width: 300px;
+    vertical-align: middle;
+}
+
+.quality-value {
+    display: inline-block;
+    min-width: 40px;
+    margin-left: 10px;
+    font-weight: bold;
+    color: #2271b1;
+}
+
+.wp-imgpressor-actions {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 1px solid #ccd0d4;
+}
+
+.wp-imgpressor-actions h3 {
+    margin-top: 0;
+}
+
+#test-result {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    display: none;
+}
+
+#test-result.success {
+    display: block;
+    background: #d5f4e6;
+    border-left: 4px solid #00a32a;
+    color: #00a32a;
+}
+
+#test-result.error {
+    display: block;
+    background: #f8d7da;
+    border-left: 4px solid #d63638;
+    color: #d63638;
+}
+
+.wp-imgpressor-compressed {
+    color: #00a32a;
+    font-weight: 500;
+}
+
+.wp-imgpressor-not-compressed {
+    color: #646970;
+}
+
+/* Media Library Bulk Actions */
+.wp-imgpressor-progress {
+    margin: 10px 0;
+    padding: 10px;
+    background: #f6f7f7;
+    border-radius: 4px;
+}
+
+.wp-imgpressor-progress-bar {
+    height: 20px;
+    background: #2271b1;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.wp-imgpressor-progress-text {
+    margin-top: 5px;
+    font-size: 13px;
+    color: #646970;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 782px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quality-slider {
+        width: 100%;
+        max-width: 300px;
+    }
+}

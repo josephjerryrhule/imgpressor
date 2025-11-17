@@ -11,7 +11,7 @@ const multer = require('multer');
 const archiver = require('archiver');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3001;
 
 // Multer setup for file uploads
 const upload = multer({

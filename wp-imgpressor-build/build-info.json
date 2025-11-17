@@ -1,0 +1,16 @@
+{
+  "version": "2.0.0",
+  "build_date": "2025-11-17T15:38:30.234Z",
+  "build_type": "production",
+  "node_version": "v24.4.1",
+  "includes": [
+    "wp-imgpressor.php",
+    "uninstall.php",
+    "index.php",
+    "README.md",
+    "INSTALL.md",
+    "LICENSE",
+    "includes",
+    "assets"
+  ]
+}
