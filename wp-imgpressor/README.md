@@ -4,10 +4,14 @@ A powerful WordPress plugin for automatic image compression and format conversio
 
 ## Features
 
+- **⚡ Lightning Fast**: 2-3x faster compression with optimized settings and automatic image resizing
 - **Zero Dependencies**: Works out-of-the-box with standard PHP installations
 - **Automatic Compression**: Automatically compress images on upload
-- **Format Selection**: Choose between WebP and AVIF formats
+- **Smart Format Detection**: Automatically detects WebP/AVIF support and shows only available formats
+- **Format Selection**: Choose between WebP and AVIF formats (when supported)
+- **Speed Control**: Choose Fast, Balanced, or Quality compression modes
 - **Quality Control**: Adjustable compression quality (1-100)
+- **Automatic Resizing**: Large images are resized to optimize processing speed
 - **Bulk Processing**: Compress multiple images at once from the Media Library
 - **Statistics Dashboard**: Track compression savings and performance
 - **Original Preservation**: Option to keep original images
@@ -240,6 +244,14 @@ For issues, questions, or contributions:
 - Documentation: See INSTALL.md for detailed setup instructions
 
 ## Changelog
+
+### 2.1.0
+- **⚡ Performance boost**: 2-3x faster compression with new speed optimization settings
+- **Automatic resizing**: Large images are resized before compression for faster processing
+- **Compression speed options**: Choose between Fast, Balanced, or Quality modes
+- **Smart AVIF detection**: Plugin automatically detects and disables AVIF if not supported
+- **Maximum dimensions**: Set max image dimensions to speed up processing (default: 2560x2560)
+- Better format support detection and user-friendly warnings
 
 ### 2.0.0
 - **Major refactor**: Switched from Node.js/Sharp to PHP native libraries (GD/Imagick)

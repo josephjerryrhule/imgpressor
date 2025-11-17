@@ -40,4 +40,6 @@ deploy-with-*.sh
 *-debug.sh
 *-diagnostic.sh
 
+releases/
+
 # Note: public/styles.css is intentionally committed for production deployment

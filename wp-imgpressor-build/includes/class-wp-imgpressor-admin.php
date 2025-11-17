@@ -28,6 +28,9 @@ class WP_ImgPressor_Admin {
         $sanitized['quality'] = max(1, min(100, intval($input['quality'])));
         $sanitized['auto_compress'] = isset($input['auto_compress']) ? true : false;
         $sanitized['preserve_original'] = isset($input['preserve_original']) ? true : false;
+        $sanitized['max_width'] = isset($input['max_width']) ? max(100, min(10000, intval($input['max_width']))) : 2560;
+        $sanitized['max_height'] = isset($input['max_height']) ? max(100, min(10000, intval($input['max_height']))) : 2560;
+        $sanitized['compression_speed'] = in_array($input['compression_speed'], array('fast', 'balanced', 'quality')) ? $input['compression_speed'] : 'balanced';
         
         return $sanitized;
     }
@@ -86,11 +89,29 @@ class WP_ImgPressor_Admin {
                         </th>
                         <td>
                             <select name="wp_imgpressor_settings[format]" id="format">
-                                <option value="webp" <?php selected($options['format'], 'webp'); ?>>WebP</option>
-                                <option value="avif" <?php selected($options['format'], 'avif'); ?>>AVIF</option>
+                                <?php
+                                $supported_formats = $compressor->get_supported_formats();
+                                if (isset($supported_formats['webp'])) {
+                                    echo '<option value="webp" ' . selected($options['format'], 'webp', false) . '>WebP (Recommended)</option>';
+                                }
+                                if (isset($supported_formats['avif'])) {
+                                    echo '<option value="avif" ' . selected($options['format'], 'avif', false) . '>AVIF (Best Compression)</option>';
+                                }
+                                if (empty($supported_formats)) {
+                                    echo '<option value="">No formats available</option>';
+                                }
+                                ?>
                             </select>
                             <p class="description">
-                                <?php _e('Choose the format for compressed images. WebP has better compatibility, AVIF offers better compression.', 'wp-imgpressor'); ?>
+                                <?php 
+                                if (empty($supported_formats)) {
+                                    _e('No compression formats are supported by your server configuration.', 'wp-imgpressor');
+                                } elseif (!isset($supported_formats['avif'])) {
+                                    _e('WebP is supported. For AVIF support, upgrade to PHP 8.1+ or install ImageMagick 7.0+ with AVIF support.', 'wp-imgpressor');
+                                } else {
+                                    _e('Choose the format for compressed images. WebP has better compatibility, AVIF offers better compression.', 'wp-imgpressor');
+                                }
+                                ?>
                             </p>
                         </td>
                     </tr>
@@ -139,6 +160,43 @@ class WP_ImgPressor_Admin {
                         </td>
                     </tr>
                     
+                    <tr>
+                        <th scope="row">
+                            <label for="compression_speed"><?php _e('Compression Speed', 'wp-imgpressor'); ?></label>
+                        </th>
+                        <td>
+                            <select name="wp_imgpressor_settings[compression_speed]" id="compression_speed">
+                                <option value="fast" <?php selected($options['compression_speed'], 'fast'); ?>><?php _e('Fast (Lower quality, faster)', 'wp-imgpressor'); ?></option>
+                                <option value="balanced" <?php selected($options['compression_speed'], 'balanced'); ?>><?php _e('Balanced (Recommended)', 'wp-imgpressor'); ?></option>
+                                <option value="quality" <?php selected($options['compression_speed'], 'quality'); ?>><?php _e('Quality (Best quality, slower)', 'wp-imgpressor'); ?></option>
+                            </select>
+                            <p class="description">
+                                <?php _e('Balance between compression speed and quality. "Fast" is 2-3x faster but slightly larger files.', 'wp-imgpressor'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="max_width"><?php _e('Maximum Image Dimensions', 'wp-imgpressor'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" name="wp_imgpressor_settings[max_width]" id="max_width" 
+                                   value="<?php echo esc_attr(isset($options['max_width']) ? $options['max_width'] : 2560); ?>" 
+                                   min="100" max="10000" step="10" style="width: 100px;">
+                            <label for="max_width">Width</label>
+                            
+                            <input type="number" name="wp_imgpressor_settings[max_height]" id="max_height" 
+                                   value="<?php echo esc_attr(isset($options['max_height']) ? $options['max_height'] : 2560); ?>" 
+                                   min="100" max="10000" step="10" style="width: 100px; margin-left: 10px;">
+                            <label for="max_height">Height</label>
+                            
+                            <p class="description">
+                                <?php _e('Images larger than these dimensions will be resized before compression. This significantly speeds up processing. Recommended: 2560x2560 for 4K displays.', 'wp-imgpressor'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
                 </table>
                 
                 <?php submit_button(); ?>
