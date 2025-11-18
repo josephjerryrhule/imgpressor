@@ -34,6 +34,7 @@ class WP_ImgPressor {
         $options = get_option('wp_imgpressor_settings');
         if (isset($options['auto_compress']) && $options['auto_compress']) {
             add_filter('wp_handle_upload', array($this->compressor, 'compress_on_upload'), 10, 2);
+            add_action('add_attachment', array($this->compressor, 'save_compression_metadata'));
         }
         
         // Register bulk action

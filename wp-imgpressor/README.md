@@ -245,6 +245,10 @@ For issues, questions, or contributions:
 
 ## Changelog
 
+### 2.1.1
+- **Fixed**: Compression statistics now correctly track and display compressed images
+- **Fixed**: Metadata is properly saved when images are compressed on upload
+
 ### 2.1.0
 - **⚡ Performance boost**: 2-3x faster compression with new speed optimization settings
 - **Automatic resizing**: Large images are resized before compression for faster processing

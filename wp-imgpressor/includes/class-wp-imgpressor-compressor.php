@@ -8,6 +8,7 @@
 class WP_ImgPressor_Compressor {
     
     private $available_library = null;
+    private $pending_metadata = array();
     
     public function __construct() {
         $this->detect_available_library();
@@ -113,7 +114,8 @@ class WP_ImgPressor_Compressor {
                 'space_saved' => $old_size - $new_size,
                 'reduction_percent' => (($old_size - $new_size) / $old_size) * 100,
                 'format' => $options['format'],
-                'quality' => $options['quality']
+                'quality' => $options['quality'],
+                'compressed_file' => $new_file
             );
             
             // Replace or keep original based on settings
@@ -123,11 +125,36 @@ class WP_ImgPressor_Compressor {
                 $file['type'] = 'image/' . $options['format'];
             }
             
-            // Store metadata for later use (will be saved to post meta after attachment is created)
+            // Store metadata temporarily using the file path as key
+            // This will be saved to post meta when add_attachment hook fires
+            $this->pending_metadata[$new_file] = $compression_data;
             $file['wp_imgpressor_data'] = $compression_data;
         }
         
         return $file;
+    }
+    
+    /**
+     * Save compression metadata to attachment post meta
+     * Called by add_attachment hook
+     */
+    public function save_compression_metadata($attachment_id) {
+        $file_path = get_attached_file($attachment_id);
+        
+        // Check if we have pending metadata for this file
+        if (isset($this->pending_metadata[$file_path])) {
+            $data = $this->pending_metadata[$file_path];
+            
+            update_post_meta($attachment_id, '_wp_imgpressor_compressed', 1);
+            update_post_meta($attachment_id, '_wp_imgpressor_original_size', $data['original_size']);
+            update_post_meta($attachment_id, '_wp_imgpressor_compressed_size', $data['compressed_size']);
+            update_post_meta($attachment_id, '_wp_imgpressor_space_saved', $data['space_saved']);
+            update_post_meta($attachment_id, '_wp_imgpressor_reduction', $data['reduction_percent']);
+            update_post_meta($attachment_id, '_wp_imgpressor_format', $data['format']);
+            
+            // Clean up
+            unset($this->pending_metadata[$file_path]);
+        }
     }
     
     public function compress_attachment($attachment_id) {
