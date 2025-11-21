@@ -242,38 +242,35 @@ class WP_ImgPressor_Compressor {
     private function compress_with_imagick($input_path, $output_path, $format, $quality) {
         try {
             $imagick = new Imagick($input_path);
-            
-            // Get options for optimization
             $options = get_option('wp_imgpressor_settings');
-            $max_width = isset($options['max_width']) ? intval($options['max_width']) : 2560;
-            $max_height = isset($options['max_height']) ? intval($options['max_height']) : 2560;
-            $speed = isset($options['compression_speed']) ? $options['compression_speed'] : 'balanced';
             
-            // Resize if image is too large (speeds up compression significantly)
-            $width = $imagick->getImageWidth();
-            $height = $imagick->getImageHeight();
-            
-            if ($width > $max_width || $height > $max_height) {
-                $imagick->resizeImage($max_width, $max_height, Imagick::FILTER_LANCZOS, 1, true);
+            // 1. Backup Original if enabled
+            if (isset($options['backup_original']) && $options['backup_original']) {
+                $this->backup_original($input_path);
             }
             
-            // Convert to target format
+            // 2. Resize if enabled and larger than max dimensions
+            $max_width = isset($options['max_width']) ? intval($options['max_width']) : 0;
+            $max_height = isset($options['max_height']) ? intval($options['max_height']) : 0;
+            
+            if ($max_width > 0 && $max_height > 0) {
+                $width = $imagick->getImageWidth();
+                $height = $imagick->getImageHeight();
+                
+                if ($width > $max_width || $height > $max_height) {
+                    $imagick->resizeImage($max_width, $max_height, Imagick::FILTER_LANCZOS, 1, true);
+                }
+            }
+            
+            // 3. Strip Metadata if enabled
+            if (!isset($options['strip_exif']) || $options['strip_exif']) {
+                $imagick->stripImage();
+            }
+            
+            // 4. Convert and Compress
             if ($format === 'webp') {
                 $imagick->setImageFormat('WEBP');
-                
-                // Adjust compression method based on speed setting
-                switch ($speed) {
-                    case 'fast':
-                        $imagick->setOption('webp:method', '0'); // Fastest
-                        $imagick->setOption('webp:low-memory', 'true');
-                        break;
-                    case 'quality':
-                        $imagick->setOption('webp:method', '6'); // Best quality
-                        break;
-                    default: // balanced
-                        $imagick->setOption('webp:method', '4'); // Balanced
-                }
-                
+                $imagick->setOption('webp:method', '4'); // Balanced
                 $imagick->setImageCompressionQuality($quality);
             } elseif ($format === 'avif') {
                 // Check if AVIF is supported
@@ -285,24 +282,9 @@ class WP_ImgPressor_Compressor {
                     );
                 }
                 $imagick->setImageFormat('AVIF');
-                
-                // AVIF compression speed options
-                switch ($speed) {
-                    case 'fast':
-                        $imagick->setOption('heic:speed', '8'); // Fastest
-                        break;
-                    case 'quality':
-                        $imagick->setOption('heic:speed', '4'); // Best quality
-                        break;
-                    default: // balanced
-                        $imagick->setOption('heic:speed', '6'); // Balanced
-                }
-                
+                $imagick->setOption('heic:speed', '6'); // Balanced
                 $imagick->setImageCompressionQuality($quality);
             }
-            
-            // Remove metadata to reduce file size
-            $imagick->stripImage();
             
             // Write the compressed image
             $imagick->writeImage($output_path);
@@ -330,6 +312,26 @@ class WP_ImgPressor_Compressor {
             );
         }
     }
+
+    /**
+     * Backup the original image to a separate directory
+     */
+    private function backup_original($file_path) {
+        $upload_dir = wp_upload_dir();
+        $backup_dir = $upload_dir['basedir'] . '/imgpressor-backups';
+        
+        if (!file_exists($backup_dir)) {
+            wp_mkdir_p($backup_dir);
+        }
+        
+        $filename = basename($file_path);
+        $backup_path = $backup_dir . '/' . $filename;
+        
+        // Don't overwrite existing backups
+        if (!file_exists($backup_path)) {
+            copy($file_path, $backup_path);
+        }
+    }
     
     /**
      * Compress image using GD
@@ -348,82 +350,67 @@ class WP_ImgPressor_Compressor {
         $width = $image_info[0];
         $height = $image_info[1];
         
-        // Get options for optimization
         $options = get_option('wp_imgpressor_settings');
-        $max_width = isset($options['max_width']) ? intval($options['max_width']) : 2560;
-        $max_height = isset($options['max_height']) ? intval($options['max_height']) : 2560;
         
-        // Create image resource from source
+        // 1. Backup Original if enabled
+        if (isset($options['backup_original']) && $options['backup_original']) {
+            $this->backup_original($input_path);
+        }
+        
+        // Create image resource
         switch ($mime_type) {
-            case 'image/jpeg':
-                $image = imagecreatefromjpeg($input_path);
-                break;
-            case 'image/png':
-                $image = imagecreatefrompng($input_path);
-                // Preserve transparency
-                imagealphablending($image, false);
-                imagesavealpha($image, true);
-                break;
-            case 'image/gif':
-                $image = imagecreatefromgif($input_path);
-                break;
-            case 'image/webp':
-                $image = imagecreatefromwebp($input_path);
-                break;
-            default:
-                return array(
-                    'success' => false,
-                    'message' => __('Unsupported image format', 'wp-imgpressor')
-                );
+            case 'image/jpeg': $image = imagecreatefromjpeg($input_path); break;
+            case 'image/png': $image = imagecreatefrompng($input_path); break;
+            case 'image/gif': $image = imagecreatefromgif($input_path); break;
+            case 'image/webp': $image = imagecreatefromwebp($input_path); break;
+            default: return array('success' => false, 'message' => __('Unsupported format', 'wp-imgpressor'));
         }
         
         if (!$image) {
-            return array(
-                'success' => false,
-                'message' => __('Failed to create image resource', 'wp-imgpressor')
-            );
+            return array('success' => false, 'message' => __('Failed to create image resource', 'wp-imgpressor'));
         }
         
-        // Resize if image is too large (speeds up compression)
-        if ($width > $max_width || $height > $max_height) {
-            $ratio = min($max_width / $width, $max_height / $height);
+        // 2. Resize if enabled
+        $max_width = isset($options['max_width']) ? intval($options['max_width']) : 0;
+        $max_height = isset($options['max_height']) ? intval($options['max_height']) : 0;
+        
+        if (($max_width > 0 && $width > $max_width) || ($max_height > 0 && $height > $max_height)) {
+            $ratio = 1;
+            if ($max_width > 0 && $width > $max_width) {
+                $ratio = min($ratio, $max_width / $width);
+            }
+            if ($max_height > 0 && $height > $max_height) {
+                $ratio = min($ratio, $max_height / $height);
+            }
+            
             $new_width = round($width * $ratio);
             $new_height = round($height * $ratio);
             
             $resized = imagecreatetruecolor($new_width, $new_height);
             
-            // Preserve transparency for PNG/WebP
+            // Preserve transparency
             imagealphablending($resized, false);
             imagesavealpha($resized, true);
             $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
             imagefill($resized, 0, 0, $transparent);
             
-            // Resize with high quality
             imagecopyresampled($resized, $image, 0, 0, 0, 0, $new_width, $new_height, $width, $height);
             imagedestroy($image);
             $image = $resized;
         }
         
-        // Convert to target format
+        // 3. Convert and Save (GD strips EXIF by default when creating new images)
         $success = false;
         if ($format === 'webp') {
-            // Check if WebP is supported
             if (!function_exists('imagewebp')) {
                 imagedestroy($image);
-                return array(
-                    'success' => false,
-                    'message' => __('WebP format not supported by your PHP GD installation', 'wp-imgpressor')
-                );
+                return array('success' => false, 'message' => __('WebP not supported by GD', 'wp-imgpressor'));
             }
             $success = imagewebp($image, $output_path, $quality);
         } elseif ($format === 'avif') {
-            // Check if AVIF is supported (PHP 8.1+)
             if (!function_exists('imageavif')) {
                 imagedestroy($image);
-                return array(
-                    'success' => false,
-                    'message' => __('AVIF format requires PHP 8.1+ with GD compiled with AVIF support', 'wp-imgpressor')
-                );
+                return array('success' => false, 'message' => __('AVIF not supported by GD', 'wp-imgpressor'));
             }
             $success = imageavif($image, $output_path, $quality);
         }
@@ -438,10 +425,7 @@ class WP_ImgPressor_Compressor {
             );
         }
         
-        return array(
-            'success' => false,
-            'message' => __('Failed to compress image', 'wp-imgpressor')
-        );
+        return array('success' => false, 'message' => __('Failed to compress image', 'wp-imgpressor'));
     }
     
     public function test_compression() {

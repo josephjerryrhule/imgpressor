@@ -37,6 +37,15 @@ class WP_ImgPressor_Admin {
         $sanitized['api_url'] = esc_url_raw($input['api_url']);
         $sanitized['api_key'] = sanitize_text_field($input['api_key']);
         
+        // Advanced
+        $sanitized['strip_exif'] = isset($input['strip_exif']) ? (bool) $input['strip_exif'] : false;
+        $sanitized['backup_original'] = isset($input['backup_original']) ? (bool) $input['backup_original'] : false;
+        
+        // CDN
+        $sanitized['enable_cdn'] = isset($input['enable_cdn']) ? (bool) $input['enable_cdn'] : false;
+        $sanitized['cdn_url'] = esc_url_raw($input['cdn_url']);
+        $sanitized['cdn_dirs'] = sanitize_text_field($input['cdn_dirs']);
+        
         // Performance settings
         $sanitized['enable_lazy_load'] = isset($input['enable_lazy_load']) ? true : false;
         $sanitized['lazy_load_animation'] = in_array($input['lazy_load_animation'], array('fade', 'blur', 'skeleton')) ? $input['lazy_load_animation'] : 'fade';
@@ -276,94 +285,12 @@ class WP_ImgPressor_Admin {
                             
                             <p class="description">
                                 <?php _e('Images larger than these dimensions will be resized before compression. This significantly speeds up processing. Recommended: 2560x2560 for 4K displays.', 'wp-imgpressor'); ?>
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-                
-                <table class="form-table">
-                    <tr>
-                        <th scope="row" colspan="2">
-                            <h2 class="title"><?php _e('Frontend Performance', 'wp-imgpressor'); ?></h2>
-                            <p class="description"><?php _e('Optimize how images are served to your visitors.', 'wp-imgpressor'); ?></p>
-                        </th>
-                    </tr>
-                    <tr>
-                        <th scope="row">
-                            <label for="enable_lazy_load"><?php _e('Lazy Loading', 'wp-imgpressor'); ?></label>
-                        </th>
-                        <td>
-                            <label class="switch">
-                                <input type="checkbox" name="wp_imgpressor_settings[enable_lazy_load]" id="enable_lazy_load" value="1" <?php checked(isset($options['enable_lazy_load']) ? $options['enable_lazy_load'] : false); ?>>
-                                <span class="slider round"></span>
-                            </label>
-                            <p class="description"><?php _e('Enable smart lazy loading with animations. Improves initial page load speed.', 'wp-imgpressor'); ?></p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">
-                            <label for="lazy_load_animation"><?php _e('Loading Animation', 'wp-imgpressor'); ?></label>
-                        </th>
-                        <td>
-                            <select name="wp_imgpressor_settings[lazy_load_animation]" id="lazy_load_animation">
-                                <option value="fade" <?php selected(isset($options['lazy_load_animation']) ? $options['lazy_load_animation'] : 'fade', 'fade'); ?>><?php _e('Fade In', 'wp-imgpressor'); ?></option>
-                                <option value="blur" <?php selected(isset($options['lazy_load_animation']) ? $options['lazy_load_animation'] : 'fade', 'blur'); ?>><?php _e('Blur Up', 'wp-imgpressor'); ?></option>
-                                <option value="skeleton" <?php selected(isset($options['lazy_load_animation']) ? $options['lazy_load_animation'] : 'fade', 'skeleton'); ?>><?php _e('Skeleton Pulse', 'wp-imgpressor'); ?></option>
-                            </select>
-                            <p class="description"><?php _e('Choose the visual effect while images are loading.', 'wp-imgpressor'); ?></p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">
-                            <label for="add_dimensions"><?php _e('Fix CLS (Add Dimensions)', 'wp-imgpressor'); ?></label>
-                        </th>
-                        <td>
-                            <label class="switch">
-                                <input type="checkbox" name="wp_imgpressor_settings[add_dimensions]" id="add_dimensions" value="1" <?php checked(isset($options['add_dimensions']) ? $options['add_dimensions'] : false); ?>>
-                                <span class="slider round"></span>
-                            </label>
-                            <p class="description"><?php _e('Automatically add missing width and height attributes to images to prevent Cumulative Layout Shift.', 'wp-imgpressor'); ?></p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th scope="row">
-                            <label for="preload_lcp"><?php _e('Preload LCP Image', 'wp-imgpressor'); ?></label>
-                        </th>
-                        <td>
-                            <label class="switch">
-                                <input type="checkbox" name="wp_imgpressor_settings[preload_lcp]" id="preload_lcp" value="1" <?php checked(isset($options['preload_lcp']) ? $options['preload_lcp'] : false); ?>>
-                                <span class="slider round"></span>
-                            </label>
-                            <p class="description"><?php _e('Preload the first image (likely LCP) to improve Core Web Vitals.', 'wp-imgpressor'); ?></p>
-                        </td>
-                    </tr>
-                </table>
-
-                <?php submit_button(); ?>
-                
-                <div class="wp-imgpressor-actions">
-                    <h2><?php _e('Tools', 'wp-imgpressor'); ?></h2>
-                    <div class="card">
-                        <h3><?php _e('Bulk Optimization', 'wp-imgpressor'); ?></h3>
-                        <p><?php _e('Optimize all images in your media library in the background. You can navigate away from this page while it runs.', 'wp-imgpressor'); ?></p>
-                        <button type="button" id="wp-imgpressor-start-bulk" class="button button-primary button-large">
-                            <?php _e('Start Bulk Optimization', 'wp-imgpressor'); ?>
-                        </button>
-                    </div>
-                    
-                    <div class="card" style="margin-top: 20px;">
-                        <h3><?php _e('Test Compression', 'wp-imgpressor'); ?></h3>
-                        <p><?php _e('Upload a test image to verify that compression is working correctly.', 'wp-imgpressor'); ?></p>
-                        <button type="button" id="wp-imgpressor-test-btn" class="button button-secondary">
-                            <?php _e('Test Compression', 'wp-imgpressor'); ?>
-                        </button>
-                        <div id="wp-imgpressor-test-result" style="margin-top: 15px; display: none;"></div>
-                    </div>
+            <div class="wp-imgpressor-wrap">
+            <div class="wp-imgpressor-header">
+                <div class="wp-imgpressor-title">
+                    <h1>🚀 WP ImgPressor <span style="font-size: 14px; background: #e5f5fa; color: #0085ba; padding: 4px 8px; border-radius: 4px; margin-left: 10px;">v<?php echo WP_IMGPRESSOR_VERSION; ?></span></h1>
                 </div>
-            </form>
-        </div>
-        <?php
-    }
+                <div class="wp-imgpressor-actions">
     
     public function enqueue_admin_assets($hook) {
         // Enqueue global admin script on all pages for toast notifications
