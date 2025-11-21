@@ -1,0 +1,117 @@
+/* Progress bars and animations */
+.wp-imgpressor-progress-bar-container {
+  width: 100%;
+  height: 30px;
+  background: #f0f0f1;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.wp-imgpressor-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #0073aa 0%, #00a0d2 100%);
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.wp-imgpressor-progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.bulk-optimization-controls .spinner {
+  float: none;
+  margin: 0 10px;
+  vertical-align: middle;
+}
+
+.bulk-optimization-controls .progress-text {
+  margin: 10px 0;
+  font-weight: 500;
+  color: #2271b1;
+}
+
+/* Animation Preview */
+.animation-preview-box {
+  position: relative;
+  background: #e0e0e0;
+}
+
+.preview-image {
+  transition: opacity 0.5s ease-in-out;
+}
+
+.preview-image.lazy-fade {
+  animation: fadeIn 0.5s ease-in-out forwards;
+}
+
+.preview-image.lazy-blur {
+  animation: blurUp 0.8s ease-out forwards;
+}
+
+.preview-image.lazy-skeleton {
+  animation: skeleton 1.5s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes blurUp {
+  from {
+    filter: blur(20px);
+    transform: scale(1.1);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes skeleton {
+  0%,
+  100% {
+    background-color: #e0e0e0;
+  }
+  50% {
+    background-color: #f5f5f5;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

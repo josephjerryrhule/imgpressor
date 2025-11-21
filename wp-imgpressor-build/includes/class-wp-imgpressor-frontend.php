@@ -31,7 +31,7 @@ class WP_ImgPressor_Frontend {
         
         // Lazy Loading
         if (isset($options['enable_lazy_load']) && $options['enable_lazy_load']) {
-            add_filter('the_content', array($this, 'add_lazy_load_attributes'));
+            add_filter('the_content', array($this, 'filter_content'));
             add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
         }
         
