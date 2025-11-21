@@ -9,11 +9,13 @@ class WP_ImgPressor {
     
     protected $admin;
     protected $compressor;
+    protected $frontend;
     
     public function __construct() {
         $this->load_dependencies();
         $this->admin = new WP_ImgPressor_Admin();
         $this->compressor = new WP_ImgPressor_Compressor();
+        $this->frontend = new WP_ImgPressor_Frontend();
     }
     
     private function load_dependencies() {
@@ -44,5 +46,8 @@ class WP_ImgPressor {
         // Add custom column to media library
         add_filter('manage_media_columns', array($this->admin, 'add_compression_column'));
         add_action('manage_media_custom_column', array($this->admin, 'display_compression_column'), 10, 2);
+        
+        // Initialize frontend optimizations
+        $this->frontend->init();
     }
 }

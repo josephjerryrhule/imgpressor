@@ -1,0 +1,45 @@
+/* Base lazy load styles */
+img.wp-imgpressor-lazy {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out, filter 0.5s ease-in-out;
+}
+
+img.wp-imgpressor-loaded {
+  opacity: 1;
+}
+
+/* Fade Animation */
+img.lazy-fade.wp-imgpressor-lazy {
+  opacity: 0;
+}
+img.lazy-fade.wp-imgpressor-loaded {
+  opacity: 1;
+}
+
+/* Blur Animation */
+img.lazy-blur.wp-imgpressor-lazy {
+  filter: blur(10px);
+  opacity: 1; /* Show blurred placeholder */
+}
+img.lazy-blur.wp-imgpressor-loaded {
+  filter: blur(0);
+  opacity: 1;
+}
+
+/* Skeleton Animation */
+img.lazy-skeleton.wp-imgpressor-lazy {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: wp-imgpressor-skeleton 1.5s infinite;
+  opacity: 1;
+  min-height: 100px; /* Ensure visibility */
+}
+
+@keyframes wp-imgpressor-skeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
