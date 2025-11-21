@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // Build script for Cloudflare Pages static deployment
-console.log('🏗️  Building static assets for Cloudflare Pages...');
+console.log("🏗️  Building static assets for Cloudflare Pages...");
 
-const distDir = path.join(__dirname, '../dist');
-const publicDir = path.join(__dirname, '../public');
+const distDir = path.join(__dirname, "../dist");
+const publicDir = path.join(__dirname, "../public");
 
 // Ensure dist directory exists
 if (!fs.existsSync(distDir)) {
@@ -28,8 +28,10 @@ function copyDirectory(src, dest) {
 
     if (entry.isDirectory()) {
       // Skip optimized directory for Pages deployment
-      if (entry.name === 'optimized') {
-        console.log(`⏭️  Skipping ${entry.name} directory (not needed for static deployment)`);
+      if (entry.name === "optimized") {
+        console.log(
+          `⏭️  Skipping ${entry.name} directory (not needed for static deployment)`
+        );
         continue;
       }
       copyDirectory(srcPath, destPath);
@@ -44,8 +46,8 @@ function copyDirectory(src, dest) {
 copyDirectory(publicDir, distDir);
 
 // Update index.html for Cloudflare Pages deployment
-const indexPath = path.join(distDir, 'index.html');
-let indexContent = fs.readFileSync(indexPath, 'utf8');
+const indexPath = path.join(distDir, "index.html");
+let indexContent = fs.readFileSync(indexPath, "utf8");
 
 // Replace the API configuration for Pages deployment
 const configScript = `
@@ -58,13 +60,13 @@ const configScript = `
 </script>`;
 
 // Replace existing config script or insert before closing head tag
-if (indexContent.includes('window.IMGPRESSOR_CONFIG')) {
+if (indexContent.includes("window.IMGPRESSOR_CONFIG")) {
   indexContent = indexContent.replace(
     /<script>[\s\S]*?window\.IMGPRESSOR_CONFIG[\s\S]*?<\/script>/,
     configScript
   );
 } else {
-  indexContent = indexContent.replace('</head>', configScript + '\n</head>');
+  indexContent = indexContent.replace("</head>", configScript + "\n</head>");
 }
 
 // Update form action to use /api/process for Pages Functions
@@ -81,27 +83,27 @@ const deploymentNote = `
   For traditional server deployment, use 'npm start' instead.
 -->`;
 
-indexContent = deploymentNote + '\n' + indexContent;
+indexContent = deploymentNote + "\n" + indexContent;
 
 fs.writeFileSync(indexPath, indexContent);
 
-console.log('✅ Static build complete!');
+console.log("✅ Static build complete!");
 console.log(`📦 Assets built to: ${distDir}`);
-console.log('🚀 Ready for Cloudflare Pages deployment');
+console.log("🚀 Ready for Cloudflare Pages deployment");
 
 // Create _routes.json for Cloudflare Pages routing
 const routesConfig = {
   version: 1,
-  include: ["/api/*", "/process", "/hello", "/debug"],
-  exclude: ["/*"]
+  include: ["/*"],
+  exclude: [],
 };
 
 fs.writeFileSync(
-  path.join(distDir, '_routes.json'),
+  path.join(distDir, "_routes.json"),
   JSON.stringify(routesConfig, null, 2)
 );
 
-console.log('📋 Created _routes.json for Pages Functions routing');
+console.log("📋 Created _routes.json for Pages Functions routing");
 
 // Create a simple health check function
 const healthFunction = `
@@ -117,18 +119,18 @@ export async function onRequestGet() {
 }
 `;
 
-if (!fs.existsSync(path.join(__dirname, '../functions/api'))) {
-  fs.mkdirSync(path.join(__dirname, '../functions/api'), { recursive: true });
+if (!fs.existsSync(path.join(__dirname, "../functions/api"))) {
+  fs.mkdirSync(path.join(__dirname, "../functions/api"), { recursive: true });
 }
 
 fs.writeFileSync(
-  path.join(__dirname, '../functions/api/health.js'),
+  path.join(__dirname, "../functions/api/health.js"),
   healthFunction
 );
 
-console.log('🏥 Created health check function');
-console.log('');
-console.log('Next steps:');
-console.log('  1. Deploy to Cloudflare Pages: npm run deploy:pages');
-console.log('  2. Or test locally: npm run pages:dev');
-console.log('');
+console.log("🏥 Created health check function");
+console.log("");
+console.log("Next steps:");
+console.log("  1. Deploy to Cloudflare Pages: npm run deploy:pages");
+console.log("  2. Or test locally: npm run pages:dev");
+console.log("");
