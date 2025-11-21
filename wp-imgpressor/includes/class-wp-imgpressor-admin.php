@@ -170,206 +170,131 @@ class WP_ImgPressor_Admin {
                     </table>
                 </div>
                 
-                <div class="card">
-                    <h2><?php _e('CDN Settings', 'wp-imgpressor'); ?></h2>
-                    <p class="description"><?php _e('Rewrite image URLs to serve them from your CDN.', 'wp-imgpressor'); ?></p>
-                    
-                    <table class="form-table">
-                        <tr>
-                            <th scope="row">
-                                <?php _e('Enable CDN', 'wp-imgpressor'); ?>
-                            </th>
-                            <td>
-                                <label>
-                                    <input type="checkbox" name="wp_imgpressor_settings[enable_cdn]" 
-                                           value="1" <?php checked(isset($options['enable_cdn']) ? $options['enable_cdn'] : false, true); ?>>
-                                    <?php _e('Enable CDN URL Rewriting', 'wp-imgpressor'); ?>
-                                </label>
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <th scope="row">
-                                <label for="cdn_url"><?php _e('CDN Hostname', 'wp-imgpressor'); ?></label>
-                            </th>
-                            <td>
-                                <input type="url" name="wp_imgpressor_settings[cdn_url]" id="cdn_url" 
-                                       value="<?php echo esc_attr(isset($options['cdn_url']) ? $options['cdn_url'] : ''); ?>" 
-                                       class="regular-text" placeholder="https://cdn.yoursite.com">
-                                <p class="description">
-                                    <?php _e('Enter the base URL of your CDN (e.g., https://cdn.example.com).', 'wp-imgpressor'); ?>
-                                </p>
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <th scope="row">
-                                <label for="cdn_dirs"><?php _e('Included Directories', 'wp-imgpressor'); ?></label>
-                            </th>
-                            <td>
-                                <input type="text" name="wp_imgpressor_settings[cdn_dirs]" id="cdn_dirs" 
-                                       value="<?php echo esc_attr(isset($options['cdn_dirs']) ? $options['cdn_dirs'] : 'wp-content/uploads'); ?>" 
-                                       class="regular-text">
-                                <p class="description">
-                                    <?php _e('Comma-separated list of directories to rewrite (relative to site root).', 'wp-imgpressor'); ?>
-                                </p>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                
                 <hr>
                 
-                <div class="card">
-                    <h2><?php _e('General Settings', 'wp-imgpressor'); ?></h2>
-                    
-                    <table class="form-table">
-                        <tr>
-                            <th scope="row">
-                                <label for="format"><?php _e('Output Format', 'wp-imgpressor'); ?></label>
-                            </th>
-                            <td>
-                                <select name="wp_imgpressor_settings[format]" id="format">
-                                    <?php
-                                    $supported_formats = $compressor->get_supported_formats();
-                                    if (isset($supported_formats['webp'])) {
-                                        echo '<option value="webp" ' . selected($options['format'], 'webp', false) . '>WebP (Recommended)</option>';
-                                    }
-                                    if (isset($supported_formats['avif'])) {
-                                        echo '<option value="avif" ' . selected($options['format'], 'avif', false) . '>AVIF (Best Compression)</option>';
-                                    }
-                                    if (empty($supported_formats)) {
-                                        echo '<option value="">No formats available</option>';
-                                    }
-                                    ?>
-                                </select>
-                                <p class="description">
-                                    <?php 
-                                    if (empty($supported_formats)) {
-                                        _e('No compression formats are supported by your server configuration.', 'wp-imgpressor');
-                                    } elseif (!isset($supported_formats['avif'])) {
-                                        _e('WebP is supported. For AVIF support, upgrade to PHP 8.1+ or install ImageMagick 7.0+ with AVIF support.', 'wp-imgpressor');
-                                    } else {
-                                        _e('Choose the format for compressed images. WebP has better compatibility, AVIF offers better compression.', 'wp-imgpressor');
-                                    }
-                                    ?>
-                                </p>
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <th scope="row">
-                                <label for="quality"><?php _e('Compression Quality', 'wp-imgpressor'); ?></label>
-                            </th>
-                            <td>
-                                <input type="range" name="wp_imgpressor_settings[quality]" id="quality" 
-                                       min="1" max="100" value="<?php echo esc_attr($options['quality']); ?>" 
-                                       class="quality-slider">
-                                <span class="quality-value"><?php echo esc_html($options['quality']); ?></span>
-                                <p class="description">
-                                    <?php _e('Higher values mean better quality but larger file sizes. Recommended: 80', 'wp-imgpressor'); ?>
-                                </p>
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <th scope="row">
-                                <?php _e('Automatic Compression', 'wp-imgpressor'); ?>
-                            </th>
-                            <td>
-                                <label>
-                                    <input type="checkbox" name="wp_imgpressor_settings[auto_compress]" 
-                                           value="1" <?php checked($options['auto_compress'], true); ?>>
-                                    <?php _e('Automatically compress images on upload', 'wp-imgpressor'); ?>
-                                </label>
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <th scope="row">
-                                <?php _e('Preserve Original', 'wp-imgpressor'); ?>
-                            </th>
-                            <td>
-                                <label>
-                                    <input type="checkbox" name="wp_imgpressor_settings[preserve_original]" 
-                                           value="1" <?php checked($options['preserve_original'], true); ?>>
-                                    <?php _e('Keep original images alongside compressed versions', 'wp-imgpressor'); ?>
-                                </label>
-                                <p class="description">
-                                    <?php _e('If unchecked, original images will be replaced with compressed versions.', 'wp-imgpressor'); ?>
-                                </p>
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <th scope="row">
-                                <label for="compression_speed"><?php _e('Compression Speed', 'wp-imgpressor'); ?></label>
-                            </th>
-                            <td>
-                                <select name="wp_imgpressor_settings[compression_speed]" id="compression_speed">
-                                    <option value="fast" <?php selected($options['compression_speed'], 'fast'); ?>><?php _e('Fast (Lower quality, faster)', 'wp-imgpressor'); ?></option>
-                                    <option value="balanced" <?php selected($options['compression_speed'], 'balanced'); ?>><?php _e('Balanced (Recommended)', 'wp-imgpressor'); ?></option>
-                                    <option value="quality" <?php selected($options['compression_speed'], 'quality'); ?>><?php _e('Quality (Best quality, slower)', 'wp-imgpressor'); ?></option>
-                                </select>
-                                <p class="description">
-                                    <?php _e('Balance between compression speed and quality. "Fast" is 2-3x faster but slightly larger files.', 'wp-imgpressor'); ?>
-                                </p>
-                            </td>
-                        </tr>
-                        
-                        <tr>
-                            <th scope="row">
-                                <label for="max_width"><?php _e('Maximum Image Dimensions', 'wp-imgpressor'); ?></label>
-                            </th>
-                            <td>
-                                <input type="number" name="wp_imgpressor_settings[max_width]" id="max_width" 
-                                       value="<?php echo esc_attr(isset($options['max_width']) ? $options['max_width'] : 2560); ?>" 
-                                       min="100" max="10000" step="10" style="width: 100px;">
-                                <label for="max_width">Width</label>
-                                
-                                <input type="number" name="wp_imgpressor_settings[max_height]" id="max_height" 
-                                       value="<?php echo esc_attr(isset($options['max_height']) ? $options['max_height'] : 2560); ?>" 
-                                       min="100" max="10000" step="10" style="width: 100px; margin-left: 10px;">
-                                <label for="max_height">Height</label>
-                                
-                                <p class="description">
-                                    <?php _e('Images larger than these dimensions will be resized before compression. This significantly speeds up processing. Recommended: 2560x2560 for 4K displays.', 'wp-imgpressor'); ?>
-                                </p>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <th scope="row">
-                                <?php _e('Advanced Options', 'wp-imgpressor'); ?>
-                            </th>
-                            <td>
-                                <fieldset>
-                                    <label>
-                                        <input type="checkbox" name="wp_imgpressor_settings[strip_exif]" 
-                                               value="1" <?php checked(isset($options['strip_exif']) ? $options['strip_exif'] : false, true); ?>>
-                                        <?php _e('Strip EXIF Metadata (Recommended)', 'wp-imgpressor'); ?>
-                                    </label>
-                                    <p class="description"><?php _e('Removes GPS, camera model, and other metadata to save space.', 'wp-imgpressor'); ?></p>
-                                    <br>
-                                    <label>
-                                        <input type="checkbox" name="wp_imgpressor_settings[backup_original]" 
-                                               value="1" <?php checked(isset($options['backup_original']) ? $options['backup_original'] : false, true); ?>>
-                                        <?php _e('Backup Original Images', 'wp-imgpressor'); ?>
-                                    </label>
-                                    <p class="description"><?php _e('Save a copy of the original image to /wp-content/uploads/imgpressor-backups/ before compressing.', 'wp-imgpressor'); ?></p>
-                                </fieldset>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
+                <h2><?php _e('General Settings', 'wp-imgpressor'); ?></h2>
                 
-                <?php submit_button(); ?>
-            </form>
-        </div>
-        <?php
-    }
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <label for="format"><?php _e('Output Format', 'wp-imgpressor'); ?></label>
+                        </th>
+                        <td>
+                            <select name="wp_imgpressor_settings[format]" id="format">
+                                <?php
+                                $supported_formats = $compressor->get_supported_formats();
+                                if (isset($supported_formats['webp'])) {
+                                    echo '<option value="webp" ' . selected($options['format'], 'webp', false) . '>WebP (Recommended)</option>';
+                                }
+                                if (isset($supported_formats['avif'])) {
+                                    echo '<option value="avif" ' . selected($options['format'], 'avif', false) . '>AVIF (Best Compression)</option>';
+                                }
+                                if (empty($supported_formats)) {
+                                    echo '<option value="">No formats available</option>';
+                                }
+                                ?>
+                            </select>
+                            <p class="description">
+                                <?php 
+                                if (empty($supported_formats)) {
+                                    _e('No compression formats are supported by your server configuration.', 'wp-imgpressor');
+                                } elseif (!isset($supported_formats['avif'])) {
+                                    _e('WebP is supported. For AVIF support, upgrade to PHP 8.1+ or install ImageMagick 7.0+ with AVIF support.', 'wp-imgpressor');
+                                } else {
+                                    _e('Choose the format for compressed images. WebP has better compatibility, AVIF offers better compression.', 'wp-imgpressor');
+                                }
+                                ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="quality"><?php _e('Compression Quality', 'wp-imgpressor'); ?></label>
+                        </th>
+                        <td>
+                            <input type="range" name="wp_imgpressor_settings[quality]" id="quality" 
+                                   min="1" max="100" value="<?php echo esc_attr($options['quality']); ?>" 
+                                   class="quality-slider">
+                            <span class="quality-value"><?php echo esc_html($options['quality']); ?></span>
+                            <p class="description">
+                                <?php _e('Higher values mean better quality but larger file sizes. Recommended: 80', 'wp-imgpressor'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <?php _e('Automatic Compression', 'wp-imgpressor'); ?>
+                        </th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="wp_imgpressor_settings[auto_compress]" 
+                                       value="1" <?php checked($options['auto_compress'], true); ?>>
+                                <?php _e('Automatically compress images on upload', 'wp-imgpressor'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <?php _e('Preserve Original', 'wp-imgpressor'); ?>
+                        </th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="wp_imgpressor_settings[preserve_original]" 
+                                       value="1" <?php checked($options['preserve_original'], true); ?>>
+                                <?php _e('Keep original images alongside compressed versions', 'wp-imgpressor'); ?>
+                            </label>
+                            <p class="description">
+                                <?php _e('If unchecked, original images will be replaced with compressed versions.', 'wp-imgpressor'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="compression_speed"><?php _e('Compression Speed', 'wp-imgpressor'); ?></label>
+                        </th>
+                        <td>
+                            <select name="wp_imgpressor_settings[compression_speed]" id="compression_speed">
+                                <option value="fast" <?php selected($options['compression_speed'], 'fast'); ?>><?php _e('Fast (Lower quality, faster)', 'wp-imgpressor'); ?></option>
+                                <option value="balanced" <?php selected($options['compression_speed'], 'balanced'); ?>><?php _e('Balanced (Recommended)', 'wp-imgpressor'); ?></option>
+                                <option value="quality" <?php selected($options['compression_speed'], 'quality'); ?>><?php _e('Quality (Best quality, slower)', 'wp-imgpressor'); ?></option>
+                            </select>
+                            <p class="description">
+                                <?php _e('Balance between compression speed and quality. "Fast" is 2-3x faster but slightly larger files.', 'wp-imgpressor'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="max_width"><?php _e('Maximum Image Dimensions', 'wp-imgpressor'); ?></label>
+                        </th>
+                        <td>
+                            <input type="number" name="wp_imgpressor_settings[max_width]" id="max_width" 
+                                   value="<?php echo esc_attr(isset($options['max_width']) ? $options['max_width'] : 2560); ?>" 
+                                   min="100" max="10000" step="10" style="width: 100px;">
+                            <label for="max_width">Width</label>
+                            
+                            <input type="number" name="wp_imgpressor_settings[max_height]" id="max_height" 
+                                   value="<?php echo esc_attr(isset($options['max_height']) ? $options['max_height'] : 2560); ?>" 
+                                   min="100" max="10000" step="10" style="width: 100px; margin-left: 10px;">
+                            <label for="max_height">Height</label>
+                            
+                            <p class="description">
+                                <?php _e('Images larger than these dimensions will be resized before compression. This significantly speeds up processing. Recommended: 2560x2560 for 4K displays.', 'wp-imgpressor'); ?>
+            <div class="wp-imgpressor-wrap">
+            <div class="wp-imgpressor-header">
+                <div class="wp-imgpressor-title">
+                    <h1>🚀 WP ImgPressor <span style="font-size: 14px; background: #e5f5fa; color: #0085ba; padding: 4px 8px; border-radius: 4px; margin-left: 10px;">v<?php echo WP_IMGPRESSOR_VERSION; ?></span></h1>
+                </div>
+                <div class="wp-imgpressor-actions">
     
-    public function enqueue_admin_assets($hook) {
+<?php
+    }
+  public function enqueue_admin_assets($hook) {
         // Enqueue global admin script on all pages for toast notifications
         wp_enqueue_script('wp-imgpressor-admin-global', WP_IMGPRESSOR_PLUGIN_URL . 'assets/js/admin-global.js', array('jquery'), WP_IMGPRESSOR_VERSION, true);
         wp_enqueue_style('wp-imgpressor-admin-css', WP_IMGPRESSOR_PLUGIN_URL . 'assets/css/admin.css', array(), WP_IMGPRESSOR_VERSION);
@@ -532,4 +457,5 @@ class WP_ImgPressor_Admin {
             'avg_reduction' => floatval($avg_reduction)
         );
     }
+
 }
