@@ -67,6 +67,7 @@ require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor.php';
 require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-admin.php';
 require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-compressor.php';
 require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-api.php';
+require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-frontend.php';
 
 /**
  * Initialize the plugin

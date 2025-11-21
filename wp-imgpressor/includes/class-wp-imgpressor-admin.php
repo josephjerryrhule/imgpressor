@@ -37,6 +37,12 @@ class WP_ImgPressor_Admin {
         $sanitized['api_url'] = esc_url_raw($input['api_url']);
         $sanitized['api_key'] = sanitize_text_field($input['api_key']);
         
+        // Performance settings
+        $sanitized['enable_lazy_load'] = isset($input['enable_lazy_load']) ? true : false;
+        $sanitized['lazy_load_animation'] = in_array($input['lazy_load_animation'], array('fade', 'blur', 'skeleton')) ? $input['lazy_load_animation'] : 'fade';
+        $sanitized['add_dimensions'] = isset($input['add_dimensions']) ? true : false;
+        $sanitized['preload_lcp'] = isset($input['preload_lcp']) ? true : false;
+        
         return $sanitized;
     }
     
@@ -275,6 +281,64 @@ class WP_ImgPressor_Admin {
                     </tr>
                 </table>
                 
+                <table class="form-table">
+                    <tr>
+                        <th scope="row" colspan="2">
+                            <h2 class="title"><?php _e('Frontend Performance', 'wp-imgpressor'); ?></h2>
+                            <p class="description"><?php _e('Optimize how images are served to your visitors.', 'wp-imgpressor'); ?></p>
+                        </th>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="enable_lazy_load"><?php _e('Lazy Loading', 'wp-imgpressor'); ?></label>
+                        </th>
+                        <td>
+                            <label class="switch">
+                                <input type="checkbox" name="wp_imgpressor_settings[enable_lazy_load]" id="enable_lazy_load" value="1" <?php checked(isset($options['enable_lazy_load']) ? $options['enable_lazy_load'] : false); ?>>
+                                <span class="slider round"></span>
+                            </label>
+                            <p class="description"><?php _e('Enable smart lazy loading with animations. Improves initial page load speed.', 'wp-imgpressor'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="lazy_load_animation"><?php _e('Loading Animation', 'wp-imgpressor'); ?></label>
+                        </th>
+                        <td>
+                            <select name="wp_imgpressor_settings[lazy_load_animation]" id="lazy_load_animation">
+                                <option value="fade" <?php selected(isset($options['lazy_load_animation']) ? $options['lazy_load_animation'] : 'fade', 'fade'); ?>><?php _e('Fade In', 'wp-imgpressor'); ?></option>
+                                <option value="blur" <?php selected(isset($options['lazy_load_animation']) ? $options['lazy_load_animation'] : 'fade', 'blur'); ?>><?php _e('Blur Up', 'wp-imgpressor'); ?></option>
+                                <option value="skeleton" <?php selected(isset($options['lazy_load_animation']) ? $options['lazy_load_animation'] : 'fade', 'skeleton'); ?>><?php _e('Skeleton Pulse', 'wp-imgpressor'); ?></option>
+                            </select>
+                            <p class="description"><?php _e('Choose the visual effect while images are loading.', 'wp-imgpressor'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="add_dimensions"><?php _e('Fix CLS (Add Dimensions)', 'wp-imgpressor'); ?></label>
+                        </th>
+                        <td>
+                            <label class="switch">
+                                <input type="checkbox" name="wp_imgpressor_settings[add_dimensions]" id="add_dimensions" value="1" <?php checked(isset($options['add_dimensions']) ? $options['add_dimensions'] : false); ?>>
+                                <span class="slider round"></span>
+                            </label>
+                            <p class="description"><?php _e('Automatically add missing width and height attributes to images to prevent Cumulative Layout Shift.', 'wp-imgpressor'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <label for="preload_lcp"><?php _e('Preload LCP Image', 'wp-imgpressor'); ?></label>
+                        </th>
+                        <td>
+                            <label class="switch">
+                                <input type="checkbox" name="wp_imgpressor_settings[preload_lcp]" id="preload_lcp" value="1" <?php checked(isset($options['preload_lcp']) ? $options['preload_lcp'] : false); ?>>
+                                <span class="slider round"></span>
+                            </label>
+                            <p class="description"><?php _e('Preload the first image (likely LCP) to improve Core Web Vitals.', 'wp-imgpressor'); ?></p>
+                        </td>
+                    </tr>
+                </table>
+
                 <?php submit_button(); ?>
                 
                 <div class="wp-imgpressor-actions">
