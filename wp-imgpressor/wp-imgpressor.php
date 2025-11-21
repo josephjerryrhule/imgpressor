@@ -66,6 +66,7 @@ register_deactivation_hook(__FILE__, 'deactivate_wp_imgpressor');
 require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor.php';
 require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-admin.php';
 require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-compressor.php';
+require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-api.php';
 
 /**
  * Initialize the plugin
