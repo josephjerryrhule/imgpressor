@@ -22,28 +22,75 @@ class WP_ImgPressor_Frontend {
             return;
         }
 
-        // Enqueue assets if lazy loading is enabled
-        if (isset($this->options['enable_lazy_load']) && $this->options['enable_lazy_load']) {
-            add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
-            add_filter('the_content', array($this, 'filter_content'), 99);
-            add_filter('post_thumbnail_html', array($this, 'filter_html'), 99);
-        }
-
-        // Add dimensions if enabled
-        if (isset($this->options['add_dimensions']) && $this->options['add_dimensions']) {
-            add_filter('the_content', array($this, 'add_image_dimensions'), 10);
+        $options = get_option('wp_imgpressor_settings');
+        
+        // CDN Rewriting
+        if (isset($options['enable_cdn']) && $options['enable_cdn'] && !empty($options['cdn_url'])) {
+            add_action('template_redirect', array($this, 'start_buffer'), 1);
         }
         
-        // Preload LCP if enabled
-        if (isset($this->options['preload_lcp']) && $this->options['preload_lcp']) {
+        // Lazy Loading
+        if (isset($options['enable_lazy_load']) && $options['enable_lazy_load']) {
+            add_filter('the_content', array($this, 'add_lazy_load_attributes'));
+            add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
+        }
+        
+        // Add Dimensions (CLS)
+        if (isset($options['add_dimensions']) && $options['add_dimensions']) {
+            add_filter('the_content', array($this, 'add_image_dimensions'));
+        }
+        
+        // Preload LCP
+        if (isset($options['preload_lcp']) && $options['preload_lcp']) {
             add_action('wp_head', array($this, 'preload_lcp_image'), 1);
         }
+    }
+    
+    public function start_buffer() {
+        ob_start(array($this, 'rewrite_cdn_urls'));
+    }
+    
+    public function rewrite_cdn_urls($content) {
+        $options = get_option('wp_imgpressor_settings');
+        $cdn_url = rtrim($options['cdn_url'], '/');
+        $site_url = rtrim(site_url(), '/');
+        $dirs = isset($options['cdn_dirs']) ? explode(',', $options['cdn_dirs']) : array('wp-content/uploads');
+        
+        if (empty($cdn_url) || empty($content)) {
+            return $content;
+        }
+        
+        foreach ($dirs as $dir) {
+            $dir = trim($dir);
+            if (empty($dir)) continue;
+            
+            $base_url = $site_url . '/' . $dir;
+            $cdn_base_url = $cdn_url . '/' . $dir;
+            
+            // Escape for regex
+            $base_url_regex = preg_quote($base_url, '/');
+            
+            // Replace URLs
+            // Matches src="...", href="...", srcset="..." containing the base URL
+            $content = preg_replace(
+                '/(src|href|srcset)=["\']' . $base_url_regex . '(.*?)["\']/i', 
+                '$1="' . $cdn_base_url . '$2"', 
+                $content
+            );
+            
+            // Also handle escaped JSON URLs (often found in data attributes or scripts)
+            $base_url_json = str_replace('/', '\/', $base_url);
+            $cdn_base_url_json = str_replace('/', '\/', $cdn_base_url);
+            $content = str_replace($base_url_json, $cdn_base_url_json, $content);
+        }
+        
+        return $content;
     }
 
     /**
      * Enqueue frontend scripts and styles
      */
-    public function enqueue_assets() {
+    public function enqueue_frontend_assets() {
         wp_enqueue_style(
             'wp-imgpressor-frontend',
             WP_IMGPRESSOR_PLUGIN_URL . 'assets/css/frontend.css',
