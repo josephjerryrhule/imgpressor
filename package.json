@@ -19,6 +19,7 @@
     "build:wp:patch": "node scripts/build-wp-plugin.js patch",
     "build:wp:minor": "node scripts/build-wp-plugin.js minor",
     "build:wp:major": "node scripts/build-wp-plugin.js major",
+    "build:wp:release": "node scripts/build-wp-plugin.js release",
     "postinstall": "npm run build",
     "prod": "NODE_ENV=production pm2 start ecosystem.config.js --env production",
     "stop": "pm2 stop ecosystem.config.js",
