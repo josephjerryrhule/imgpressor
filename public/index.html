@@ -1,505 +1,682 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <!-- SEO Meta Tags -->
-    <title>ImgPressor - Free Online Image Compressor | Reduce Image Size Without Quality Loss</title>
-    <meta name="description" content="Compress images online for free with ImgPressor. Reduce JPG, PNG, WebP, and AVIF file sizes by up to 90% without losing quality. Fast, secure, and easy to use image optimization tool.">
-    <meta name="keywords" content="image compressor, compress images, reduce image size, image optimization, JPG compressor, PNG compressor, WebP converter, AVIF converter, free image tool">
-    <meta name="author" content="ImgPressor">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://pressor.themewire.co">
-    
+    <title>
+      ImgPressor - Free Online Image Compressor | Reduce Image Size Without
+      Quality Loss
+    </title>
+    <meta
+      name="description"
+      content="Compress images online for free with ImgPressor. Reduce JPG, PNG, WebP, and AVIF file sizes by up to 90% without losing quality. Fast, secure, and easy to use image optimization tool."
+    />
+    <meta
+      name="keywords"
+      content="image compressor, compress images, reduce image size, image optimization, JPG compressor, PNG compressor, WebP converter, AVIF converter, free image tool"
+    />
+    <meta name="author" content="ImgPressor" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://pressor.themewire.co" />
+
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://pressor.themewire.co">
-    <meta property="og:title" content="ImgPressor - Free Online Image Compressor">
-    <meta property="og:description" content="Compress images online for free. Reduce JPG, PNG, WebP, and AVIF file sizes by up to 90% without losing quality. Fast, secure, and easy to use.">
-    <meta property="og:image" content="https://pressor.themewire.co/apple-touch-icon.png">
-    <meta property="og:site_name" content="ImgPressor">
-    
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://pressor.themewire.co" />
+    <meta
+      property="og:title"
+      content="ImgPressor - Free Online Image Compressor"
+    />
+    <meta
+      property="og:description"
+      content="Compress images online for free. Reduce JPG, PNG, WebP, and AVIF file sizes by up to 90% without losing quality. Fast, secure, and easy to use."
+    />
+    <meta
+      property="og:image"
+      content="https://pressor.themewire.co/apple-touch-icon.png"
+    />
+    <meta property="og:site_name" content="ImgPressor" />
+
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://pressor.themewire.co">
-    <meta property="twitter:title" content="ImgPressor - Free Online Image Compressor">
-    <meta property="twitter:description" content="Compress images online for free. Reduce file sizes by up to 90% without losing quality.">
-    <meta property="twitter:image" content="https://pressor.themewire.co/apple-touch-icon.png">
-    
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://pressor.themewire.co" />
+    <meta
+      property="twitter:title"
+      content="ImgPressor - Free Online Image Compressor"
+    />
+    <meta
+      property="twitter:description"
+      content="Compress images online for free. Reduce file sizes by up to 90% without losing quality."
+    />
+    <meta
+      property="twitter:image"
+      content="https://pressor.themewire.co/apple-touch-icon.png"
+    />
+
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="manifest" href="/site.webmanifest">
-    
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
     <!-- Theme -->
-    <meta name="theme-color" content="#3B82F6">
-    <meta name="msapplication-TileColor" content="#3B82F6">
-    
+    <meta name="theme-color" content="#3B82F6" />
+    <meta name="msapplication-TileColor" content="#3B82F6" />
+
     <!-- Preconnect for performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+
     <!-- Structured Data -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "ImgPressor",
-      "description": "Free online image compressor that reduces file sizes without quality loss. Supports JPG, PNG, WebP, and AVIF formats.",
-      "url": "https://pressor.themewire.co",
-      "applicationCategory": "ImageApplication",
-      "operatingSystem": "Web",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Image compression",
-        "Multi-format support (JPG, PNG, WebP, AVIF)",
-        "Batch processing",
-        "No file size limits",
-        "Privacy-focused (files auto-deleted)"
-      ],
-      "screenshot": "https://pressor.themewire.co/apple-touch-icon.png",
-      "author": {
-        "@type": "Organization",
-        "name": "ImgPressor"
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "ImgPressor",
+        "description": "Free online image compressor that reduces file sizes without quality loss. Supports JPG, PNG, WebP, and AVIF formats.",
+        "url": "https://pressor.themewire.co",
+        "applicationCategory": "ImageApplication",
+        "operatingSystem": "Web",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Image compression",
+          "Multi-format support (JPG, PNG, WebP, AVIF)",
+          "Batch processing",
+          "No file size limits",
+          "Privacy-focused (files auto-deleted)"
+        ],
+        "screenshot": "https://pressor.themewire.co/apple-touch-icon.png",
+        "author": {
+          "@type": "Organization",
+          "name": "ImgPressor"
+        }
       }
-    }
     </script>
-    
+
     <!-- API Configuration for Cloudflare Pages compatibility -->
     <script>
-    // Default configuration for traditional deployment
-    window.IMGPRESSOR_CONFIG = window.IMGPRESSOR_CONFIG || {
-      API_URL: '',  // Empty means same origin
-      ENVIRONMENT: 'development',
-      USE_PAGES_FUNCTIONS: false
-    };
+      // Default configuration for traditional deployment
+      window.IMGPRESSOR_CONFIG = window.IMGPRESSOR_CONFIG || {
+        API_URL: "", // Empty means same origin
+        ENVIRONMENT: "development",
+        USE_PAGES_FUNCTIONS: false,
+      };
     </script>
-    
-    <link rel="stylesheet" href="/styles.css?v=2.0">
-</head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+
+    <link rel="stylesheet" href="/styles.css?v=2.0" />
+  </head>
+  <body class="bg-gray-100 min-h-screen flex items-center justify-center">
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 class="text-2xl font-bold text-center mb-6 text-gray-800">
-            <span class="text-blue-600">Img</span>Pressor
-        </h1>
-        <form action="/process" method="POST" enctype="multipart/form-data" class="space-y-4">
-            <div>
-                <label for="url" class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                <input type="url" id="url" name="url" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://example.com/image.jpg">
+      <h1 class="text-2xl font-bold text-center mb-6 text-gray-800">
+        <span class="text-blue-600">Img</span>Pressor
+      </h1>
+      <form
+        action="/process"
+        method="POST"
+        enctype="multipart/form-data"
+        class="space-y-4"
+      >
+        <div>
+          <label for="url" class="block text-sm font-medium text-gray-700 mb-1"
+            >Image URL</label
+          >
+          <input
+            type="url"
+            id="url"
+            name="url"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://example.com/image.jpg"
+          />
+        </div>
+
+        <div class="text-center text-gray-500">or</div>
+
+        <div>
+          <label
+            for="images"
+            class="block text-sm font-medium text-gray-700 mb-1"
+            >Upload Images</label
+          >
+          <div class="relative">
+            <input
+              type="file"
+              id="images"
+              name="images"
+              accept="image/*"
+              multiple
+              class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+            <div class="drop-zone">
+              <svg
+                class="mx-auto h-12 w-12 text-gray-400 mb-4"
+                stroke="currentColor"
+                fill="none"
+                viewBox="0 0 48 48"
+              >
+                <path
+                  d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></path>
+              </svg>
+              <p class="text-gray-600">
+                Click to upload images or drag and drop
+              </p>
+              <p class="text-sm text-gray-500 mt-1">
+                JPG, PNG, GIF up to 20MB each
+              </p>
             </div>
-            
-            <div class="text-center text-gray-500">or</div>
-            
-            <div>
-                <label for="images" class="block text-sm font-medium text-gray-700 mb-1">Upload Images</label>
-                <div class="relative">
-                    <input type="file" id="images" name="images" accept="image/*" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                    <div class="drop-zone">
-                        <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-                        </svg>
-                        <p class="text-gray-600">Click to upload images or drag and drop</p>
-                        <p class="text-sm text-gray-500 mt-1">JPG, PNG, GIF up to 20MB each</p>
-                    </div>
-                </div>
-                <div id="fileList" class="mt-2 space-y-1"></div>
+          </div>
+          <div id="fileList" class="mt-2 space-y-1"></div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >Output Format</label
+          >
+          <div class="grid grid-cols-2 gap-2">
+            <label
+              class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+            >
+              <input
+                type="radio"
+                name="format"
+                value="webp"
+                checked
+                class="mr-2"
+              />
+              <div>
+                <div class="font-medium text-sm">WebP</div>
+                <div class="text-xs text-gray-500">Best compression</div>
+              </div>
+            </label>
+            <label
+              class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+            >
+              <input type="radio" name="format" value="avif" class="mr-2" />
+              <div>
+                <div class="font-medium text-sm">AVIF</div>
+                <div class="text-xs text-gray-500">Highest quality</div>
+              </div>
+            </label>
+            <label
+              class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+            >
+              <input type="radio" name="format" value="jpeg" class="mr-2" />
+              <div>
+                <div class="font-medium text-sm">JPEG</div>
+                <div class="text-xs text-gray-500">Universal support</div>
+              </div>
+            </label>
+            <label
+              class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+            >
+              <input type="radio" name="format" value="png" class="mr-2" />
+              <div>
+                <div class="font-medium text-sm">PNG</div>
+                <div class="text-xs text-gray-500">Lossless</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label
+            for="quality"
+            class="block text-sm font-medium text-gray-700 mb-1"
+            >Quality: <span id="qualityValue">80</span>%</label
+          >
+          <input
+            type="range"
+            id="quality"
+            name="quality"
+            min="10"
+            max="100"
+            value="80"
+            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div class="text-xs text-gray-500 mt-1">
+            Higher quality = larger file size
+          </div>
+        </div>
+
+        <!-- Upload Progress -->
+        <div id="uploadProgress" class="hidden">
+          <div class="flex items-center justify-between mb-1">
+            <span id="progressStage" class="text-sm font-medium text-gray-700"
+              >Preparing...</span
+            >
+            <span id="uploadPercent" class="text-sm text-gray-500">0%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div
+              id="uploadBar"
+              class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500 ease-out w-0 relative"
+            >
+              <div
+                class="absolute inset-0 bg-white bg-opacity-30 rounded-full animate-pulse"
+              ></div>
             </div>
-            
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Output Format</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="format" value="webp" checked class="mr-2">
-                        <div>
-                            <div class="font-medium text-sm">WebP</div>
-                            <div class="text-xs text-gray-500">Best compression</div>
-                        </div>
-                    </label>
-                    <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="format" value="avif" class="mr-2">
-                        <div>
-                            <div class="font-medium text-sm">AVIF</div>
-                            <div class="text-xs text-gray-500">Highest quality</div>
-                        </div>
-                    </label>
-                    <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="format" value="jpeg" class="mr-2">
-                        <div>
-                            <div class="font-medium text-sm">JPEG</div>
-                            <div class="text-xs text-gray-500">Universal support</div>
-                        </div>
-                    </label>
-                    <label class="flex items-center p-3 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
-                        <input type="radio" name="format" value="png" class="mr-2">
-                        <div>
-                            <div class="font-medium text-sm">PNG</div>
-                            <div class="text-xs text-gray-500">Lossless</div>
-                        </div>
-                    </label>
-                </div>
-            </div>
-            
-            <div>
-                <label for="quality" class="block text-sm font-medium text-gray-700 mb-1">Quality: <span id="qualityValue">80</span>%</label>
-                <input type="range" id="quality" name="quality" min="10" max="100" value="80" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                <div class="text-xs text-gray-500 mt-1">Higher quality = larger file size</div>
-            </div>
-            
-            <!-- Upload Progress -->
-            <div id="uploadProgress" class="hidden">
-                <div class="flex items-center justify-between mb-1">
-                    <span id="progressStage" class="text-sm font-medium text-gray-700">Preparing...</span>
-                    <span id="uploadPercent" class="text-sm text-gray-500">0%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-3">
-                    <div id="uploadBar" class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500 ease-out w-0 relative">
-                        <div class="absolute inset-0 bg-white bg-opacity-30 rounded-full animate-pulse"></div>
-                    </div>
-                </div>
-                <div id="progressDetails" class="text-xs text-gray-400 mt-1 hidden">
-                    <span id="progressDetail"></span>
-                </div>
-            </div>
-            
-            <!-- Processing Progress -->
-            <div id="processProgress" class="hidden">
-                <div class="flex items-center justify-center space-x-2 py-2">
-                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    <span class="text-sm text-gray-600">Compressing images...</span>
-                </div>
-            </div>
-            
-            <button type="submit" id="compressBtn" class="w-full btn-primary py-2 px-6 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                <span id="btnText">Select images to compress</span>
-            </button>
-        </form>
+          </div>
+          <div id="progressDetails" class="text-xs text-gray-400 mt-1 hidden">
+            <span id="progressDetail"></span>
+          </div>
+        </div>
+
+        <!-- Processing Progress -->
+        <div id="processProgress" class="hidden">
+          <div class="flex items-center justify-center space-x-2 py-2">
+            <div
+              class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"
+            ></div>
+            <span class="text-sm text-gray-600">Compressing images...</span>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          id="compressBtn"
+          class="w-full btn-primary py-2 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled
+        >
+          <span id="btnText">Select images to compress</span>
+        </button>
+      </form>
     </div>
 
     <script>
-        // DOM Elements
-        const qualitySlider = document.getElementById('quality');
-        const qualityValue = document.getElementById('qualityValue');
-        const fileInput = document.getElementById('images');
-        const fileList = document.getElementById('fileList');
-        const dropZone = fileInput.parentElement.querySelector('.drop-zone');
-        const compressBtn = document.getElementById('compressBtn');
-        const btnText = document.getElementById('btnText');
-        const uploadProgress = document.getElementById('uploadProgress');
-        const processProgress = document.getElementById('processProgress');
-        const uploadBar = document.getElementById('uploadBar');
-        const uploadPercent = document.getElementById('uploadPercent');
-        const progressStage = document.getElementById('progressStage');
-        const progressDetails = document.getElementById('progressDetails');
-        const progressDetail = document.getElementById('progressDetail');
-        const form = document.querySelector('form');
-        const urlInput = document.getElementById('url');
-        
-        let uploadComplete = false;
-        let filesSelected = false;
-        
-        // Quality slider
-        qualitySlider.addEventListener('input', function() {
-            qualityValue.textContent = this.value;
+      // DOM Elements
+      const qualitySlider = document.getElementById("quality");
+      const qualityValue = document.getElementById("qualityValue");
+      const fileInput = document.getElementById("images");
+      const fileList = document.getElementById("fileList");
+      const dropZone = fileInput.parentElement.querySelector(".drop-zone");
+      const compressBtn = document.getElementById("compressBtn");
+      const btnText = document.getElementById("btnText");
+      const uploadProgress = document.getElementById("uploadProgress");
+      const processProgress = document.getElementById("processProgress");
+      const uploadBar = document.getElementById("uploadBar");
+      const uploadPercent = document.getElementById("uploadPercent");
+      const progressStage = document.getElementById("progressStage");
+      const progressDetails = document.getElementById("progressDetails");
+      const progressDetail = document.getElementById("progressDetail");
+      const form = document.querySelector("form");
+      const urlInput = document.getElementById("url");
+
+      let uploadComplete = false;
+      let filesSelected = false;
+
+      // Quality slider
+      qualitySlider.addEventListener("input", function () {
+        qualityValue.textContent = this.value;
+      });
+
+      // File input change
+      fileInput.addEventListener("change", function () {
+        handleFileSelection(this.files);
+      });
+
+      // URL input change
+      urlInput.addEventListener("input", function () {
+        updateButtonState();
+      });
+
+      // Format radio buttons
+      document.querySelectorAll('input[name="format"]').forEach((radio) => {
+        radio.addEventListener("change", function () {
+          const formatInfo = {
+            webp: "Best compression, modern browsers",
+            avif: "Highest quality, newer browsers",
+            jpeg: "Universal support, lossy",
+            png: "Lossless, larger files",
+          };
+          // You could show format info here if needed
         });
-        
-        // File input change
-        fileInput.addEventListener('change', function() {
-            handleFileSelection(this.files);
-        });
-        
-        // URL input change  
-        urlInput.addEventListener('input', function() {
-            updateButtonState();
-        });
-        
-        // Format radio buttons
-        document.querySelectorAll('input[name="format"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const formatInfo = {
-                    webp: 'Best compression, modern browsers',
-                    avif: 'Highest quality, newer browsers',
-                    jpeg: 'Universal support, lossy',
-                    png: 'Lossless, larger files'
-                };
-                // You could show format info here if needed
-            });
-        });
-        
-        // Drag and drop functionality
-        dropZone.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            this.classList.add('border-blue-500', 'bg-blue-50');
-        });
-        
-        dropZone.addEventListener('dragleave', function(e) {
-            e.preventDefault();
-            this.classList.remove('border-blue-500', 'bg-blue-50');
-        });
-        
-        dropZone.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('border-blue-500', 'bg-blue-50');
-            const files = e.dataTransfer.files;
-            fileInput.files = files;
-            handleFileSelection(files);
-        });
-        
-        // Form submission with progress
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            if (!uploadComplete && filesSelected) {
-                alert('Please wait for file upload to complete');
-                return;
-            }
-            
-            submitForm();
-        });
-        
-        function handleFileSelection(files) {
-            if (files.length === 0) {
-                filesSelected = false;
-                uploadComplete = false;
-                updateButtonState();
-                fileList.innerHTML = '';
-                return;
-            }
-            
-            filesSelected = true;
-            uploadComplete = false;
-            updateFileList(files);
-            simulateUploadProgress(files);
+      });
+
+      // Drag and drop functionality
+      dropZone.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        this.classList.add("border-blue-500", "bg-blue-50");
+      });
+
+      dropZone.addEventListener("dragleave", function (e) {
+        e.preventDefault();
+        this.classList.remove("border-blue-500", "bg-blue-50");
+      });
+
+      dropZone.addEventListener("drop", function (e) {
+        e.preventDefault();
+        this.classList.remove("border-blue-500", "bg-blue-50");
+        const files = e.dataTransfer.files;
+        fileInput.files = files;
+        handleFileSelection(files);
+      });
+
+      // Form submission with progress
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        if (!uploadComplete && filesSelected) {
+          alert("Please wait for file upload to complete");
+          return;
         }
-        
-        function updateFileList(files) {
-            fileList.innerHTML = '';
-            Array.from(files).forEach((file, index) => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md';
-                
-                // Validate file size (100MB limit)
-                const isLarge = file.size > 100 * 1024 * 1024;
-                const sizeClass = isLarge ? 'text-red-500' : 'text-gray-500';
-                const sizeText = formatFileSize(file.size);
-                
-                fileItem.innerHTML = `
+
+        submitForm();
+      });
+
+      function handleFileSelection(files) {
+        if (files.length === 0) {
+          filesSelected = false;
+          uploadComplete = false;
+          updateButtonState();
+          fileList.innerHTML = "";
+          return;
+        }
+
+        filesSelected = true;
+        uploadComplete = false;
+        updateFileList(files);
+        simulateUploadProgress(files);
+      }
+
+      function updateFileList(files) {
+        fileList.innerHTML = "";
+        Array.from(files).forEach((file, index) => {
+          const fileItem = document.createElement("div");
+          fileItem.className =
+            "flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md";
+
+          // Validate file size (100MB limit)
+          const isLarge = file.size > 100 * 1024 * 1024;
+          const sizeClass = isLarge ? "text-red-500" : "text-gray-500";
+          const sizeText = formatFileSize(file.size);
+
+          fileItem.innerHTML = `
                     <div class="flex items-center space-x-2">
                         <div class="w-2 h-2 bg-gray-400 rounded-full" id="status-${index}"></div>
                         <span class="text-sm text-gray-700">${file.name}</span>
                     </div>
                     <span class="text-xs ${sizeClass}">${sizeText}</span>
                 `;
-                fileList.appendChild(fileItem);
-            });
-        }
-        
-        function updateCompressionProgress(percentage, stage = '', detail = '') {
-            uploadProgress.classList.remove('hidden');
-            uploadBar.style.width = Math.min(percentage, 100) + '%';
-            uploadPercent.textContent = Math.round(percentage) + '%';
-            
-            if (stage) {
-                progressStage.textContent = stage;
-            }
-            
-            if (detail) {
-                progressDetails.classList.remove('hidden');
-                progressDetail.textContent = detail;
-            } else {
-                progressDetails.classList.add('hidden');
-            }
-            
-            // Change color based on progress stage
-            if (percentage >= 90) {
-                uploadBar.className = 'bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500 ease-out relative';
-            } else if (percentage >= 60) {
-                uploadBar.className = 'bg-gradient-to-r from-yellow-500 to-orange-500 h-3 rounded-full transition-all duration-500 ease-out relative';
-            } else {
-                uploadBar.className = 'bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500 ease-out relative';
-            }
+          fileList.appendChild(fileItem);
+        });
+      }
+
+      function updateCompressionProgress(percentage, stage = "", detail = "") {
+        uploadProgress.classList.remove("hidden");
+        uploadBar.style.width = Math.min(percentage, 100) + "%";
+        uploadPercent.textContent = Math.round(percentage) + "%";
+
+        if (stage) {
+          progressStage.textContent = stage;
         }
 
-        function simulateUploadProgress(files) {
-            uploadProgress.classList.remove('hidden');
-            uploadComplete = false;
-            updateButtonState();
-            
-            // Show initial preparation stage
-            updateCompressionProgress(5, 'Preparing files', 'Getting files ready for upload...');
-            
-            // Simulate upload progress
-            let progress = 5;
-            const progressInterval = setInterval(() => {
-                progress += 15;
-                if (progress < 100) {
-                    updateCompressionProgress(progress, 'Uploading files...', `Uploading ${files.length} file${files.length > 1 ? 's' : ''}...`);
-                } else {
-                    clearInterval(progressInterval);
-                    updateCompressionProgress(100, 'Upload complete', 'Files ready for compression');
-                    uploadComplete = true;
-                    updateButtonState();
-                    
-                    // Hide upload progress after a moment
-                    setTimeout(() => {
-                        uploadProgress.classList.add('hidden');
-                    }, 1000);
-                }
-            }, 500);
+        if (detail) {
+          progressDetails.classList.remove("hidden");
+          progressDetail.textContent = detail;
+        } else {
+          progressDetails.classList.add("hidden");
         }
-        
-        function markFilesComplete(fileCount) {
-            for (let i = 0; i < fileCount; i++) {
-                const statusDot = document.getElementById(`status-${i}`);
-                if (statusDot) {
-                    statusDot.classList.remove('bg-gray-400');
-                    statusDot.classList.add('bg-green-500');
-                }
-            }
+
+        // Change color based on progress stage
+        if (percentage >= 90) {
+          uploadBar.className =
+            "bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500 ease-out relative";
+        } else if (percentage >= 60) {
+          uploadBar.className =
+            "bg-gradient-to-r from-yellow-500 to-orange-500 h-3 rounded-full transition-all duration-500 ease-out relative";
+        } else {
+          uploadBar.className =
+            "bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500 ease-out relative";
         }
-        
-        function updateButtonState() {
-            const hasUrl = urlInput.value.trim() !== '';
-            const hasFiles = filesSelected && uploadComplete;
-            const canSubmit = hasUrl || hasFiles;
-            
-            compressBtn.disabled = !canSubmit;
-            
-            if (!filesSelected && !hasUrl) {
-                btnText.textContent = 'Select images or enter URL';
-            } else if (filesSelected && !uploadComplete) {
-                btnText.textContent = 'Uploading...';
-            } else if (canSubmit) {
-                btnText.textContent = 'Compress Images';
-            }
-        }
-        
-        function submitForm() {
-            processProgress.classList.remove('hidden');
-            compressBtn.disabled = true;
-            btnText.textContent = 'Compressing...';
-            
-            const formData = new FormData(form);
-            
-            const isSingleFile = (filesSelected && fileInput.files.length === 1) || urlInput.value.trim();
-            const fileCount = filesSelected ? fileInput.files.length : 1;
-            
-            // Simple reliable progress tracker
-            let progress = 5;
-            updateCompressionProgress(progress, 'Preparing compression...', 'Initializing image processing');
-            
-            const progressSteps = [
-                { percent: 15, stage: 'Uploading files...', detail: `Sending ${fileCount} file${fileCount > 1 ? 's' : ''} to server...` },
-                { percent: 35, stage: 'Processing images...', detail: `Server received files - starting analysis` },
-                { percent: 55, stage: 'Compressing images...', detail: `Optimizing ${fileCount} image${fileCount > 1 ? 's' : ''}...` },
-                { percent: 75, stage: 'Finalizing compression...', detail: `Applying final optimizations` },
-                { percent: 90, stage: 'Preparing download...', detail: `Getting compressed files ready` }
-            ];
-            
-            let stepIndex = 0;
-            const progressInterval = setInterval(() => {
-                if (stepIndex < progressSteps.length) {
-                    const step = progressSteps[stepIndex];
-                    updateCompressionProgress(step.percent, step.stage, step.detail);
-                    stepIndex++;
-                } else {
-                    clearInterval(progressInterval);
-                }
-            }, 800);
-            
-            // Use fetch for actual upload
-            const config = window.IMGPRESSOR_CONFIG;
-            let apiEndpoint = '/process'; // Default for traditional servers
-            
-            if (config && config.USE_PAGES_FUNCTIONS) {
-                apiEndpoint = '/api/process'; // Use API path for Pages Functions
-            } else if (config && config.API_URL) {
-                apiEndpoint = config.API_URL + '/process'; // External API
-            }
-            
-            console.log('Using API endpoint:', apiEndpoint);
-            
-            fetch(apiEndpoint, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                clearInterval(progressInterval);
-                updateCompressionProgress(100, 'Complete!', 'Processing finished successfully');
-                
-                if (response.ok) {
-                    const contentType = response.headers.get('content-type');
-                    
-                    if (contentType && contentType.includes('application/zip')) {
-                        return response.blob().then(blob => {
-                            downloadFile(blob, 'compressed_images.zip');
-                        });
-                    } else if (contentType && contentType.includes('image/')) {
-                        return response.blob().then(blob => {
-                            const format = formData.get('format') || 'webp';
-                            const fileName = isSingleFile && fileInput.files[0] ? 
-                                fileInput.files[0].name.split('.')[0] + '_compressed.' + format :
-                                'compressed_image.' + format;
-                            downloadFile(blob, fileName);
-                        });
-                    } else {
-                        return response.text().then(text => {
-                            document.body.innerHTML = text;
-                        });
-                    }
-                } else {
-                    throw new Error('Compression failed');
-                }
-            })
-            .catch(error => {
-                clearInterval(progressInterval);
-                updateCompressionProgress(0, 'Error occurred', 'Compression failed: ' + error.message);
-                alert('Error: ' + error.message);
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    processProgress.classList.add('hidden');
-                    resetForm();
-                }, 2000);
-            });
-        }
-        
-        function downloadFile(blob, filename) {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-        }
-        
-        function resetForm() {
-            filesSelected = false;
-            uploadComplete = false;
-            fileList.innerHTML = '';
-            fileInput.value = '';
-            urlInput.value = '';
-            updateButtonState();
-        }
-        
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 B';
-            const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-        }
-        
-        // Initialize button state
+      }
+
+      function simulateUploadProgress(files) {
+        uploadProgress.classList.remove("hidden");
+        uploadComplete = false;
         updateButtonState();
+
+        // Show initial preparation stage
+        updateCompressionProgress(
+          5,
+          "Preparing files",
+          "Getting files ready for upload..."
+        );
+
+        // Simulate upload progress
+        let progress = 5;
+        const progressInterval = setInterval(() => {
+          progress += 15;
+          if (progress < 100) {
+            updateCompressionProgress(
+              progress,
+              "Uploading files...",
+              `Uploading ${files.length} file${files.length > 1 ? "s" : ""}...`
+            );
+          } else {
+            clearInterval(progressInterval);
+            updateCompressionProgress(
+              100,
+              "Upload complete",
+              "Files ready for compression"
+            );
+            uploadComplete = true;
+            updateButtonState();
+
+            // Hide upload progress after a moment
+            setTimeout(() => {
+              uploadProgress.classList.add("hidden");
+            }, 1000);
+          }
+        }, 500);
+      }
+
+      function markFilesComplete(fileCount) {
+        for (let i = 0; i < fileCount; i++) {
+          const statusDot = document.getElementById(`status-${i}`);
+          if (statusDot) {
+            statusDot.classList.remove("bg-gray-400");
+            statusDot.classList.add("bg-green-500");
+          }
+        }
+      }
+
+      function updateButtonState() {
+        const hasUrl = urlInput.value.trim() !== "";
+        const hasFiles = filesSelected && uploadComplete;
+        const canSubmit = hasUrl || hasFiles;
+
+        compressBtn.disabled = !canSubmit;
+
+        if (!filesSelected && !hasUrl) {
+          btnText.textContent = "Select images or enter URL";
+        } else if (filesSelected && !uploadComplete) {
+          btnText.textContent = "Uploading...";
+        } else if (canSubmit) {
+          btnText.textContent = "Compress Images";
+        }
+      }
+
+      function submitForm() {
+        processProgress.classList.remove("hidden");
+        compressBtn.disabled = true;
+        btnText.textContent = "Compressing...";
+
+        const formData = new FormData(form);
+
+        const isSingleFile =
+          (filesSelected && fileInput.files.length === 1) ||
+          urlInput.value.trim();
+        const fileCount = filesSelected ? fileInput.files.length : 1;
+
+        // Simple reliable progress tracker
+        let progress = 5;
+        updateCompressionProgress(
+          progress,
+          "Preparing compression...",
+          "Initializing image processing"
+        );
+
+        const progressSteps = [
+          {
+            percent: 15,
+            stage: "Uploading files...",
+            detail: `Sending ${fileCount} file${
+              fileCount > 1 ? "s" : ""
+            } to server...`,
+          },
+          {
+            percent: 35,
+            stage: "Processing images...",
+            detail: `Server received files - starting analysis`,
+          },
+          {
+            percent: 55,
+            stage: "Compressing images...",
+            detail: `Optimizing ${fileCount} image${
+              fileCount > 1 ? "s" : ""
+            }...`,
+          },
+          {
+            percent: 75,
+            stage: "Finalizing compression...",
+            detail: `Applying final optimizations`,
+          },
+          {
+            percent: 90,
+            stage: "Preparing download...",
+            detail: `Getting compressed files ready`,
+          },
+        ];
+
+        let stepIndex = 0;
+        const progressInterval = setInterval(() => {
+          if (stepIndex < progressSteps.length) {
+            const step = progressSteps[stepIndex];
+            updateCompressionProgress(step.percent, step.stage, step.detail);
+            stepIndex++;
+          } else {
+            clearInterval(progressInterval);
+          }
+        }, 800);
+
+        // Use fetch for actual upload
+        const config = window.IMGPRESSOR_CONFIG;
+        let apiEndpoint = "/process"; // Default for traditional servers
+
+        if (config && config.USE_PAGES_FUNCTIONS) {
+          apiEndpoint = "/api/process"; // Use API path for Pages Functions
+        } else if (config && config.API_URL) {
+          apiEndpoint = config.API_URL + "/process"; // External API
+        }
+
+        console.log("Using API endpoint:", apiEndpoint);
+
+        fetch(apiEndpoint, {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => {
+            clearInterval(progressInterval);
+            updateCompressionProgress(
+              100,
+              "Complete!",
+              "Processing finished successfully"
+            );
+
+            if (response.ok) {
+              const contentType = response.headers.get("content-type");
+
+              if (contentType && contentType.includes("application/zip")) {
+                return response.blob().then((blob) => {
+                  downloadFile(blob, "compressed_images.zip");
+                });
+              } else if (contentType && contentType.includes("image/")) {
+                return response.blob().then((blob) => {
+                  const format = formData.get("format") || "webp";
+                  const fileName =
+                    isSingleFile && fileInput.files[0]
+                      ? fileInput.files[0].name.split(".")[0] +
+                        "_compressed." +
+                        format
+                      : "compressed_image." + format;
+                  downloadFile(blob, fileName);
+                });
+              } else {
+                return response.text().then((text) => {
+                  document.body.innerHTML = text;
+                });
+              }
+            } else {
+              return response.text().then((text) => {
+                let errorMessage = "Compression failed";
+                try {
+                  const errorData = JSON.parse(text);
+                  errorMessage =
+                    errorData.error || errorData.message || errorMessage;
+                  if (errorData.stack) console.error(errorData.stack);
+                } catch (e) {
+                  errorMessage += ": " + text.substring(0, 100);
+                }
+                throw new Error(errorMessage);
+              });
+            }
+          })
+          .catch((error) => {
+            clearInterval(progressInterval);
+            updateCompressionProgress(
+              0,
+              "Error occurred",
+              "Compression failed: " + error.message
+            );
+            alert("Error: " + error.message);
+          })
+          .finally(() => {
+            setTimeout(() => {
+              processProgress.classList.add("hidden");
+              resetForm();
+            }, 2000);
+          });
+      }
+
+      function downloadFile(blob, filename) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+
+      function resetForm() {
+        filesSelected = false;
+        uploadComplete = false;
+        fileList.innerHTML = "";
+        fileInput.value = "";
+        urlInput.value = "";
+        updateButtonState();
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 B";
+        const k = 1024;
+        const sizes = ["B", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+      }
+
+      // Initialize button state
+      updateButtonState();
     </script>
-</body>
+  </body>
 </html>

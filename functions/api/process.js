@@ -90,6 +90,26 @@ export async function onRequestPost(context) {
           file.name,
           compressionError
         );
+
+        // Convert original file to base64 for download since URL.createObjectURL isn't available
+        const arrayBuffer = await file.arrayBuffer();
+        let binary = "";
+        const bytes = new Uint8Array(arrayBuffer);
+        const len = bytes.byteLength;
+        const chunkSize = 0x8000; // 32KB chunks to avoid stack overflow
+
+        for (let i = 0; i < len; i += chunkSize) {
+          binary += String.fromCharCode.apply(
+            null,
+            bytes.subarray(i, Math.min(i + chunkSize, len))
+          );
+        }
+
+        const base64 = btoa(binary);
+        const dataUrl = `data:${
+          file.type || "application/octet-stream"
+        };base64,${base64}`;
+
         // Add as uncompressed if compression fails
         results.push({
           name: file.name,
@@ -98,8 +118,8 @@ export async function onRequestPost(context) {
           savedBytes: 0,
           savedPercentage: "0.0",
           format: format,
-          downloadUrl: URL.createObjectURL(file),
-          error: "Compression failed, original file provided",
+          downloadUrl: dataUrl,
+          error: `Compression failed: ${compressionError.message}`,
         });
       }
     }
