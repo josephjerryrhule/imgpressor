@@ -85,7 +85,7 @@ class WP_ImgPressor_API {
         
         // Add file
         $body .= "--" . $boundary . "\r\n";
-        $body .= 'Content-Disposition: form-data; name="image"; filename="' . $filename . '"' . "\r\n";
+        $body .= 'Content-Disposition: form-data; name="images"; filename="' . $filename . '"' . "\r\n";
         $body .= 'Content-Type: ' . $mime_type . "\r\n\r\n";
         $body .= $file_contents . "\r\n";
         
