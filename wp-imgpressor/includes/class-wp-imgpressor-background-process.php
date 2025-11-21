@@ -73,7 +73,11 @@ class WP_ImgPressor_Background_Process {
             $this->spawn_cron();
         }
 
-        return array('success' => true, 'count' => count($ids));
+        return array(
+            'success' => true,
+            'total' => count($ids),
+            'images' => $ids
+        );
     }
 
     /**

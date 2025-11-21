@@ -165,35 +165,72 @@ class WP_ImgPressor_Compressor {
         }
         
         $options = get_option('wp_imgpressor_settings');
+        
+        // Store original size before compression
+        $old_size = filesize($file_path);
+        
+        // Perform compression - this will create a new file with new extension if format conversion is happening
         $result = $this->compress_image($file_path, $options);
         
         if ($result['success']) {
-            $old_size = filesize($file_path);
-            $new_size = filesize($result['output_path']);
+            $compressed_path = $result['output_path'];
+            $new_size = filesize($compressed_path);
             $space_saved = $old_size - $new_size;
             $reduction = (($old_size - $new_size) / $old_size) * 100;
             
-            // Update attachment metadata
-            update_post_meta($attachment_id, '_wp_imgpressor_compressed', 1);
-            update_post_meta($attachment_id, '_wp_imgpressor_original_size', $old_size);
-            update_post_meta($attachment_id, '_wp_imgpressor_compressed_size', $new_size);
-            update_post_meta($attachment_id, '_wp_imgpressor_space_saved', $space_saved);
-            update_post_meta($attachment_id, '_wp_imgpressor_reduction', $reduction);
-            update_post_meta($attachment_id, '_wp_imgpressor_format', $options['format']);
-            
-            // Replace original if not preserving
-            if (!$options['preserve_original']) {
+            // Only proceed if we actually saved space
+            if ($space_saved > 0) {
+                // Backup original if requested (before any changes)
+                if (isset($options['backup_original']) && $options['backup_original']) {
+                    $this->backup_original($file_path);
+                }
+                
+                // Delete the original file
                 unlink($file_path);
-                update_attached_file($attachment_id, $result['output_path']);
+                
+                // Update the attachment file path to point to the new compressed file
+                update_attached_file($attachment_id, $compressed_path);
+                
+                // Update MIME type if format changed
+                $file_type = wp_check_filetype(basename($compressed_path));
+                if ($file_type['type']) {
+                    wp_update_post(array(
+                        'ID' => $attachment_id,
+                        'post_mime_type' => $file_type['type']
+                    ));
+                }
+                
+                // Regenerate thumbnails with the new compressed image
+                require_once(ABSPATH . 'wp-admin/includes/image.php');
+                $metadata = wp_generate_attachment_metadata($attachment_id, $compressed_path);
+                wp_update_attachment_metadata($attachment_id, $metadata);
+                
+                // Update compression metadata
+                update_post_meta($attachment_id, '_wp_imgpressor_compressed', 1);
+                update_post_meta($attachment_id, '_wp_imgpressor_original_size', $old_size);
+                update_post_meta($attachment_id, '_wp_imgpressor_compressed_size', $new_size);
+                update_post_meta($attachment_id, '_wp_imgpressor_space_saved', $space_saved);
+                update_post_meta($attachment_id, '_wp_imgpressor_reduction', $reduction);
+                update_post_meta($attachment_id, '_wp_imgpressor_format', $options['format']);
+                
+                return array(
+                    'success' => true,
+                    'old_size' => $old_size,
+                    'new_size' => $new_size,
+                    'space_saved' => $space_saved,
+                    'reduction' => $reduction
+                );
+            } else {
+                // Compression didn't help or made it worse, delete the compressed file
+                if (file_exists($compressed_path) && $compressed_path !== $file_path) {
+                    unlink($compressed_path);
+                }
+                
+                return array(
+                    'success' => false,
+                    'message' => __('Compression did not reduce file size', 'wp-imgpressor')
+                );
             }
-            
-            return array(
-                'success' => true,
-                'old_size' => $old_size,
-                'new_size' => $new_size,
-                'space_saved' => $space_saved,
-                'reduction' => $reduction
-            );
         }
         
         return $result;

@@ -240,6 +240,22 @@
           .prop("disabled", false)
           .next(".spinner")
           .removeClass("is-active");
+
+        // Show success toast
+        const toast = $(
+          '<div class="notice notice-success is-dismissible" style="position: fixed; top: 32px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">' +
+            "<p><strong>WP ImgPressor:</strong> Bulk optimization completed! Successfully processed " +
+            total +
+            " images. Refreshing statistics...</p>" +
+            "</div>"
+        );
+        $("body").append(toast);
+
+        // Refresh page after 2 seconds to update statistics
+        setTimeout(function () {
+          location.reload();
+        }, 2000);
+
         return;
       }
 
