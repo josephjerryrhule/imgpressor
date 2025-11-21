@@ -32,6 +32,11 @@ class WP_ImgPressor_Admin {
         $sanitized['max_height'] = isset($input['max_height']) ? max(100, min(10000, intval($input['max_height']))) : 2560;
         $sanitized['compression_speed'] = in_array($input['compression_speed'], array('fast', 'balanced', 'quality')) ? $input['compression_speed'] : 'balanced';
         
+        // Remote processing settings
+        $sanitized['enable_remote'] = isset($input['enable_remote']) ? true : false;
+        $sanitized['api_url'] = esc_url_raw($input['api_url']);
+        $sanitized['api_key'] = sanitize_text_field($input['api_key']);
+        
         return $sanitized;
     }
     
@@ -40,6 +45,13 @@ class WP_ImgPressor_Admin {
         $stats = $this->get_compression_stats();
         $compressor = new WP_ImgPressor_Compressor();
         $library = $compressor->get_available_library();
+        
+        // Check API connection if enabled
+        $api_status = null;
+        if (isset($options['enable_remote']) && $options['enable_remote']) {
+            $api = new WP_ImgPressor_API();
+            $api_status = $api->test_connection();
+        }
         ?>
         <div class="wrap wp-imgpressor-settings">
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
@@ -50,14 +62,27 @@ class WP_ImgPressor_Admin {
                 </div>
             <?php endif; ?>
             
-            <?php if (!$library): ?>
+            <?php if (isset($options['enable_remote']) && $options['enable_remote']): ?>
+                <?php if ($api_status && $api_status['success']): ?>
+                    <div class="notice notice-success">
+                        <p><strong><?php _e('Remote Processing Active', 'wp-imgpressor'); ?></strong>: <?php echo esc_html($api_status['message']); ?></p>
+                    </div>
+                <?php elseif ($api_status): ?>
+                    <div class="notice notice-error">
+                        <p><strong><?php _e('Remote Processing Error', 'wp-imgpressor'); ?></strong>: <?php echo esc_html($api_status['message']); ?></p>
+                        <p><?php _e('Falling back to local processing.', 'wp-imgpressor'); ?></p>
+                    </div>
+                <?php endif; ?>
+            <?php endif; ?>
+            
+            <?php if (!$library && (!isset($options['enable_remote']) || !$options['enable_remote'])): ?>
                 <div class="notice notice-error">
                     <p><strong><?php _e('No image processing library available!', 'wp-imgpressor'); ?></strong></p>
                     <p><?php _e('WP ImgPressor requires either GD or Imagick PHP extension to be installed. Please contact your hosting provider to enable one of these extensions.', 'wp-imgpressor'); ?></p>
                 </div>
-            <?php else: ?>
+            <?php elseif ($library && (!isset($options['enable_remote']) || !$options['enable_remote'])): ?>
                 <div class="notice notice-info">
-                    <p><?php printf(__('Using <strong>%s</strong> for image processing.', 'wp-imgpressor'), ucfirst($library)); ?></p>
+                    <p><?php printf(__('Using <strong>%s</strong> for local image processing.', 'wp-imgpressor'), ucfirst($library)); ?></p>
                 </div>
             <?php endif; ?>
             
@@ -81,6 +106,58 @@ class WP_ImgPressor_Admin {
             
             <form method="post" action="options.php" class="wp-imgpressor-form">
                 <?php settings_fields('wp_imgpressor_settings'); ?>
+                
+                <div class="card">
+                    <h2><?php _e('Remote Processing (Cloudflare)', 'wp-imgpressor'); ?></h2>
+                    <p class="description"><?php _e('Offload image processing to a remote Node.js server (e.g., Cloudflare Pages) for faster performance and reduced server load.', 'wp-imgpressor'); ?></p>
+                    
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <?php _e('Enable Remote Processing', 'wp-imgpressor'); ?>
+                            </th>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="wp_imgpressor_settings[enable_remote]" 
+                                           value="1" <?php checked(isset($options['enable_remote']) ? $options['enable_remote'] : false, true); ?>>
+                                    <?php _e('Use remote server for image compression', 'wp-imgpressor'); ?>
+                                </label>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <th scope="row">
+                                <label for="api_url"><?php _e('API URL', 'wp-imgpressor'); ?></label>
+                            </th>
+                            <td>
+                                <input type="url" name="wp_imgpressor_settings[api_url]" id="api_url" 
+                                       value="<?php echo esc_attr(isset($options['api_url']) ? $options['api_url'] : ''); ?>" 
+                                       class="regular-text" placeholder="https://your-app.pages.dev">
+                                <p class="description">
+                                    <?php _e('The URL of your deployed Cloudflare Pages or Node.js app.', 'wp-imgpressor'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                        
+                        <tr>
+                            <th scope="row">
+                                <label for="api_key"><?php _e('API Key (Optional)', 'wp-imgpressor'); ?></label>
+                            </th>
+                            <td>
+                                <input type="password" name="wp_imgpressor_settings[api_key]" id="api_key" 
+                                       value="<?php echo esc_attr(isset($options['api_key']) ? $options['api_key'] : ''); ?>" 
+                                       class="regular-text">
+                                <p class="description">
+                                    <?php _e('If your API requires authentication.', 'wp-imgpressor'); ?>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <hr>
+                
+                <h2><?php _e('General Settings', 'wp-imgpressor'); ?></h2>
                 
                 <table class="form-table">
                     <tr>
@@ -196,7 +273,6 @@ class WP_ImgPressor_Admin {
                             </p>
                         </td>
                     </tr>
-                </table>
                 </table>
                 
                 <?php submit_button(); ?>

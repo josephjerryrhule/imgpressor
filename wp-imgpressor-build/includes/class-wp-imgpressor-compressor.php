@@ -203,6 +203,22 @@ class WP_ImgPressor_Compressor {
         $format = $options['format'];
         $quality = $options['quality'];
         
+        // Check for remote processing
+        if (isset($options['enable_remote']) && $options['enable_remote']) {
+            $api = new WP_ImgPressor_API();
+            if ($api->is_configured()) {
+                $result = $api->compress_image($input_path, $options);
+                
+                if ($result['success']) {
+                    return $result;
+                }
+                
+                // Fallback to local processing if API fails
+                // Log the error or add a notice (optional)
+                // Proceed to local processing below...
+            }
+        }
+        
         // Generate output path
         $path_info = pathinfo($input_path);
         $output_path = $path_info['dirname'] . '/' . $path_info['filename'] . '.' . $format;
