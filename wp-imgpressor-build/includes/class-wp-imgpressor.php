@@ -10,12 +10,14 @@ class WP_ImgPressor {
     protected $admin;
     protected $compressor;
     protected $frontend;
+    protected $bg_process;
     
     public function __construct() {
         $this->load_dependencies();
         $this->admin = new WP_ImgPressor_Admin();
         $this->compressor = new WP_ImgPressor_Compressor();
         $this->frontend = new WP_ImgPressor_Frontend();
+        $this->bg_process = new WP_ImgPressor_Background_Process();
     }
     
     private function load_dependencies() {
@@ -31,6 +33,9 @@ class WP_ImgPressor {
         // Register AJAX handlers
         add_action('wp_ajax_wp_imgpressor_test_compression', array($this->admin, 'ajax_test_compression'));
         add_action('wp_ajax_wp_imgpressor_bulk_compress', array($this->admin, 'ajax_bulk_compress'));
+        add_action('wp_ajax_wp_imgpressor_start_bulk', array($this->admin, 'ajax_start_bulk'));
+        add_action('wp_ajax_wp_imgpressor_check_status', array($this->admin, 'ajax_check_status'));
+        add_action('wp_ajax_wp_imgpressor_clear_status', array($this->admin, 'ajax_clear_status'));
         
         // Register compression hooks
         $options = get_option('wp_imgpressor_settings');

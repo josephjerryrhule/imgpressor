@@ -342,12 +342,23 @@ class WP_ImgPressor_Admin {
                 <?php submit_button(); ?>
                 
                 <div class="wp-imgpressor-actions">
-                    <h3><?php _e('Test Compression', 'wp-imgpressor'); ?></h3>
-                    <p><?php _e('Test your compression settings before applying them.', 'wp-imgpressor'); ?></p>
-                    <button type="button" class="button button-secondary" id="test-compression">
-                        <?php _e('Run Test', 'wp-imgpressor'); ?>
-                    </button>
-                    <div id="test-result"></div>
+                    <h2><?php _e('Tools', 'wp-imgpressor'); ?></h2>
+                    <div class="card">
+                        <h3><?php _e('Bulk Optimization', 'wp-imgpressor'); ?></h3>
+                        <p><?php _e('Optimize all images in your media library in the background. You can navigate away from this page while it runs.', 'wp-imgpressor'); ?></p>
+                        <button type="button" id="wp-imgpressor-start-bulk" class="button button-primary button-large">
+                            <?php _e('Start Bulk Optimization', 'wp-imgpressor'); ?>
+                        </button>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 20px;">
+                        <h3><?php _e('Test Compression', 'wp-imgpressor'); ?></h3>
+                        <p><?php _e('Upload a test image to verify that compression is working correctly.', 'wp-imgpressor'); ?></p>
+                        <button type="button" id="wp-imgpressor-test-btn" class="button button-secondary">
+                            <?php _e('Test Compression', 'wp-imgpressor'); ?>
+                        </button>
+                        <div id="wp-imgpressor-test-result" style="margin-top: 15px; display: none;"></div>
+                    </div>
                 </div>
             </form>
         </div>
@@ -355,29 +366,61 @@ class WP_ImgPressor_Admin {
     }
     
     public function enqueue_admin_assets($hook) {
-        if ($hook !== 'settings_page_wp-imgpressor' && $hook !== 'upload.php') {
+        // Enqueue global admin script on all pages for toast notifications
+        wp_enqueue_script('wp-imgpressor-admin-global', WP_IMGPRESSOR_PLUGIN_URL . 'assets/js/admin-global.js', array('jquery'), WP_IMGPRESSOR_VERSION, true);
+        wp_enqueue_style('wp-imgpressor-admin-css', WP_IMGPRESSOR_PLUGIN_URL . 'assets/css/admin.css', array(), WP_IMGPRESSOR_VERSION);
+        
+        wp_localize_script('wp-imgpressor-admin-global', 'wpImgPressorGlobal', array(
+            'nonce' => wp_create_nonce('wp_imgpressor_nonce')
+        ));
+
+        if ($hook != 'settings_page_wp-imgpressor') {
             return;
         }
         
-        wp_enqueue_style(
-            'wp-imgpressor-admin',
-            WP_IMGPRESSOR_PLUGIN_URL . 'assets/css/admin.css',
-            array(),
-            WP_IMGPRESSOR_VERSION
-        );
+        wp_enqueue_style('wp-imgpressor-admin', WP_IMGPRESSOR_PLUGIN_URL . 'assets/css/admin.css', array(), WP_IMGPRESSOR_VERSION);
+        wp_enqueue_script('wp-imgpressor-admin', WP_IMGPRESSOR_PLUGIN_URL . 'assets/js/admin.js', array('jquery'), WP_IMGPRESSOR_VERSION, true);
         
-        wp_enqueue_script(
-            'wp-imgpressor-admin',
-            WP_IMGPRESSOR_PLUGIN_URL . 'assets/js/admin.js',
-            array('jquery'),
-            WP_IMGPRESSOR_VERSION,
-            true
-        );
-        
-        wp_localize_script('wp-imgpressor-admin', 'wpImgpressor', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('wp_imgpressor_nonce')
+        wp_localize_script('wp-imgpressor-admin', 'wpImgPressor', array(
+            'nonce' => wp_create_nonce('wp_imgpressor_nonce'),
+            'compressing' => __('Compressing...', 'wp-imgpressor'),
+            'error' => __('Error', 'wp-imgpressor')
         ));
+    }
+
+    public function ajax_start_bulk() {
+        check_ajax_referer('wp_imgpressor_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Permission denied', 'wp-imgpressor')));
+        }
+        
+        $bg_process = new WP_ImgPressor_Background_Process();
+        $result = $bg_process->start_process();
+        
+        if ($result['success']) {
+            wp_send_json_success($result);
+        } else {
+            wp_send_json_error($result);
+        }
+    }
+    
+    public function ajax_check_status() {
+        check_ajax_referer('wp_imgpressor_nonce', 'nonce');
+        
+        $bg_process = new WP_ImgPressor_Background_Process();
+        $status = $bg_process->get_status();
+        
+        wp_send_json_success($status);
+    }
+    
+    public function ajax_clear_status() {
+        check_ajax_referer('wp_imgpressor_nonce', 'nonce');
+        
+        $bg_process = new WP_ImgPressor_Background_Process();
+        $bg_process->clear_completion_flag();
+        
+        wp_send_json_success();
     }
     
     public function ajax_test_compression() {

@@ -3,7 +3,7 @@ Contributors: josephjerryrhule
 Tags: image, compression, webp, avif, optimization
 Requires at least: 5.8
 Tested up to: 6.4
-Stable tag: 2.1.3
+Stable tag: 3.0.0
 Requires PHP: 7.4
 License: MIT
 License URI: https://opensource.org/licenses/MIT
@@ -69,7 +69,7 @@ Yes! Use the bulk compression feature in Media → Library.
 
 == Changelog ==
 
-= 2.1.3 =
+= 3.0.0 =
 * Production release
 * Automatic compression on upload
 * WebP and AVIF support
@@ -79,5 +79,5 @@ Yes! Use the bulk compression feature in Media → Library.
 
 == Upgrade Notice ==
 
-= 2.1.3 =
+= 3.0.0 =
 Initial production release with full compression features.

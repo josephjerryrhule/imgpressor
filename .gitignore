@@ -41,5 +41,6 @@ deploy-with-*.sh
 *-diagnostic.sh
 
 releases/
+wp-imgpressor-build/
 
 # Note: public/styles.css is intentionally committed for production deployment
