@@ -89,36 +89,6 @@ fs.writeFileSync(indexPath, indexContent);
 
 console.log("✅ Static build complete!");
 console.log(`📦 Assets built to: ${distDir}`);
-console.log("🚀 Ready for Cloudflare Pages deployment");
-
-// Create _routes.json for Cloudflare Pages routing
-const routesConfig = {
-  version: 1,
-  include: ["/*"],
-  exclude: [],
-};
-
-fs.writeFileSync(
-  path.join(distDir, "_routes.json"),
-  JSON.stringify(routesConfig, null, 2)
-);
-
-console.log("📋 Created _routes.json for Pages Functions routing");
-
-// Create a simple health check function
-const healthFunction = `
-export async function onRequestGet() {
-  return new Response(JSON.stringify({
-    status: 'healthy',
-    version: '2.3.0',
-    platform: 'Cloudflare Pages',
-    timestamp: new Date().toISOString()
-  }), {
-    headers: { 'Content-Type': 'application/json' }
-  });
-}
-`;
-
 if (!fs.existsSync(path.join(__dirname, "../functions/api"))) {
   fs.mkdirSync(path.join(__dirname, "../functions/api"), { recursive: true });
 }

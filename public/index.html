@@ -98,16 +98,6 @@
       }
     </script>
 
-    <!-- API Configuration for Cloudflare Pages compatibility -->
-    <script>
-      // Default configuration for traditional deployment
-      window.IMGPRESSOR_CONFIG = window.IMGPRESSOR_CONFIG || {
-        API_URL: "", // Empty means same origin
-        ENVIRONMENT: "development",
-        USE_PAGES_FUNCTIONS: false,
-      };
-    </script>
-
     <link rel="stylesheet" href="/styles.css?v=2.0" />
   </head>
   <body class="bg-gray-100 min-h-screen flex items-center justify-center">
@@ -568,14 +558,7 @@
         }, 800);
 
         // Use fetch for actual upload
-        const config = window.IMGPRESSOR_CONFIG;
-        let apiEndpoint = "/process"; // Default for traditional servers
-
-        if (config && config.USE_PAGES_FUNCTIONS) {
-          apiEndpoint = "/api/process"; // Use API path for Pages Functions
-        } else if (config && config.API_URL) {
-          apiEndpoint = config.API_URL + "/process"; // External API
-        }
+        const apiEndpoint = "/process"; // Standard endpoint
 
         console.log("Using API endpoint:", apiEndpoint);
 
