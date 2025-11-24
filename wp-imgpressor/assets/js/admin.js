@@ -371,5 +371,97 @@
       e.preventDefault();
       playAnimation($("#lazy_load_animation").val());
     });
+    // Tab Switching
+    $(".nav-tab-wrapper a").on("click", function (e) {
+      e.preventDefault();
+
+      // Update tabs
+      $(".nav-tab-wrapper a").removeClass("nav-tab-active");
+      $(this).addClass("nav-tab-active");
+
+      // Show content
+      $(".wp-imgpressor-tab-content").hide();
+      var target = $(this).attr("href");
+      $(target.replace("#", "#tab-")).show();
+
+      // Update URL hash
+      window.location.hash = target;
+    });
+
+    // Check hash on load
+    if (window.location.hash) {
+      var hash = window.location.hash.replace("#", "");
+      $('.nav-tab-wrapper a[data-tab="' + hash + '"]').click();
+    }
+
+    // License Activation
+    $("#activate-license-btn").on("click", function () {
+      var btn = $(this);
+      var key = $("#license_key").val();
+      var spinner = btn.next(".spinner");
+
+      if (!key) {
+        alert("Please enter a license key");
+        return;
+      }
+
+      btn.prop("disabled", true);
+      spinner.addClass("is-active");
+
+      $.ajax({
+        url: wpImgpressor.ajax_url,
+        type: "POST",
+        data: {
+          action: "imgpressor_activate_license",
+          nonce: wpImgpressor.nonce,
+          license_key: key,
+        },
+        success: function (response) {
+          if (response.success) {
+            location.reload();
+          } else {
+            alert(response.data || "Activation failed");
+            btn.prop("disabled", false);
+            spinner.removeClass("is-active");
+          }
+        },
+        error: function () {
+          alert("Connection error");
+          btn.prop("disabled", false);
+          spinner.removeClass("is-active");
+        },
+      });
+    });
+
+    // License Deactivation
+    $("#deactivate-license-btn").on("click", function () {
+      if (!confirm("Are you sure you want to deactivate this license?")) {
+        return;
+      }
+
+      var btn = $(this);
+      btn.prop("disabled", true);
+
+      $.ajax({
+        url: wpImgpressor.ajax_url,
+        type: "POST",
+        data: {
+          action: "imgpressor_deactivate_license",
+          nonce: wpImgpressor.nonce,
+        },
+        success: function (response) {
+          if (response.success) {
+            location.reload();
+          } else {
+            alert(response.data || "Deactivation failed");
+            btn.prop("disabled", false);
+          }
+        },
+        error: function () {
+          alert("Connection error");
+          btn.prop("disabled", false);
+        },
+      });
+    });
   });
 })(jQuery);

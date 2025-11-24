@@ -69,6 +69,8 @@ require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-compressor
 require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-api.php';
 require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-frontend.php';
 require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-background-process.php';
+require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-license.php';
+require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-updater.php';
 
 /**
  * Initialize the plugin
@@ -78,3 +80,10 @@ function run_wp_imgpressor() {
     $plugin->run();
 }
 run_wp_imgpressor();
+
+/**
+ * Initialize updater
+ */
+if (is_admin()) {
+    new WP_ImgPressor_Updater(WP_IMGPRESSOR_PLUGIN_BASENAME);
+}

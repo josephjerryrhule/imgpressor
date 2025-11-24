@@ -15,6 +15,13 @@ class WP_ImgPressor_Admin {
             'wp-imgpressor',
             array($this, 'display_settings_page')
         );
+        
+        // Register settings
+        add_action('admin_init', array($this, 'register_settings'));
+        
+        // AJAX handlers for license
+        add_action('wp_ajax_imgpressor_activate_license', array($this, 'ajax_activate_license'));
+        add_action('wp_ajax_imgpressor_deactivate_license', array($this, 'ajax_deactivate_license'));
     }
     
     public function register_settings() {
@@ -123,10 +130,17 @@ class WP_ImgPressor_Admin {
                 </div>
             <?php endif; ?>
             
+            <h2 class="nav-tab-wrapper wp-imgpressor-tabs">
+                <a href="#general" class="nav-tab nav-tab-active" data-tab="general"><?php _e('General Settings', 'wp-imgpressor'); ?></a>
+                <a href="#performance" class="nav-tab" data-tab="performance"><?php _e('Performance', 'wp-imgpressor'); ?></a>
+                <a href="#license" class="nav-tab" data-tab="license"><?php _e('License', 'wp-imgpressor'); ?></a>
+            </h2>
+            
             <form method="post" action="options.php" class="wp-imgpressor-form">
                 <?php settings_fields('wp_imgpressor_settings'); ?>
                 
-                <div class="card">
+                <div id="tab-general" class="wp-imgpressor-tab-content active">
+                    <div class="card">
                     <h2><?php _e('Remote Processing (Cloudflare)', 'wp-imgpressor'); ?></h2>
                     <p class="description"><?php _e('Offload image processing to a remote Node.js server (e.g., Cloudflare Pages) for faster performance and reduced server load.', 'wp-imgpressor'); ?></p>
                     
@@ -621,4 +635,49 @@ class WP_ImgPressor_Admin {
         );
     }
 
+    /**
+     * AJAX handler for license activation
+     */
+    public function ajax_activate_license() {
+        check_ajax_referer('imgpressor_license_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('Permission denied', 'wp-imgpressor'));
+        }
+        
+        $license_key = isset($_POST['license_key']) ? sanitize_text_field($_POST['license_key']) : '';
+        
+        if (empty($license_key)) {
+            wp_send_json_error(__('License key is required', 'wp-imgpressor'));
+        }
+        
+        $license_manager = new WP_ImgPressor_License();
+        $result = $license_manager->activate_license($license_key);
+        
+        if ($result['success']) {
+            wp_send_json_success($result);
+        } else {
+            wp_send_json_error($result['message']);
+        }
+    }
+    
+    /**
+     * AJAX handler for license deactivation
+     */
+    public function ajax_deactivate_license() {
+        check_ajax_referer('imgpressor_license_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('Permission denied', 'wp-imgpressor'));
+        }
+        
+        $license_manager = new WP_ImgPressor_License();
+        $result = $license_manager->deactivate_license();
+        
+        if ($result['success']) {
+            wp_send_json_success($result);
+        } else {
+            wp_send_json_error($result['message']);
+        }
+    }
 }

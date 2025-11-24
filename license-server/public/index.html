@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>License Manager</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-content">
+          <h1>License Manager</h1>
+          <p>Manage subscriptions and activations</p>
+        </div>
+        <button class="btn btn-primary" onclick="showCreateModal()">
+          Create License
+        </button>
+      </header>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">Total Licenses</span>
+            <span class="stat-icon">📄</span>
+          </div>
+          <div class="stat-value" id="totalLicenses">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">Active Licenses</span>
+            <span class="stat-icon">✅</span>
+          </div>
+          <div class="stat-value" id="activeLicenses">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">Total Activations</span>
+            <span class="stat-icon">🌐</span>
+          </div>
+          <div class="stat-value" id="totalActivations">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-title">Monthly Revenue</span>
+            <span class="stat-icon">💰</span>
+          </div>
+          <div class="stat-value" id="monthlyRevenue">$0</div>
+        </div>
+      </div>
+
+      <!-- Search and Filter -->
+      <div class="toolbar">
+        <input
+          type="text"
+          id="searchInput"
+          class="search-input"
+          placeholder="Search licenses..."
+        />
+        <select id="tierFilter" class="filter-select">
+          <option value="">All Tiers</option>
+          <option value="free">Free</option>
+          <option value="starter">Starter</option>
+          <option value="pro">Pro</option>
+          <option value="agency">Agency</option>
+        </select>
+        <select id="statusFilter" class="filter-select">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="expired">Expired</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <!-- Licenses Table -->
+      <div class="card">
+        <div class="card-header">
+          <h2>Licenses</h2>
+          <button class="btn btn-secondary btn-small" onclick="loadLicenses()">
+            Refresh
+          </button>
+        </div>
+        <div class="table-container">
+          <table class="licenses-table">
+            <thead>
+              <tr>
+                <th>License Key</th>
+                <th>Email</th>
+                <th>Tier</th>
+                <th>Status</th>
+                <th>Activations</th>
+                <th>Expires</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="licensesTableBody">
+              <tr>
+                <td colspan="7" class="empty-state">
+                  <div class="empty-icon">⟳</div>
+                  <p>Loading licenses...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create License Modal -->
+    <div id="createModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Create License</h2>
+          <button class="close-btn" onclick="closeCreateModal()">
+            &times;
+          </button>
+        </div>
+        <form id="createLicenseForm" onsubmit="createLicense(event)">
+          <div class="form-group">
+            <label for="userEmail">Email</label>
+            <input
+              type="email"
+              id="userEmail"
+              required
+              placeholder="user@example.com"
+            />
+          </div>
+          <div class="form-group">
+            <label for="tier">Tier</label>
+            <select id="tier" required>
+              <option value="free">Free</option>
+              <option value="starter">Starter</option>
+              <option value="pro" selected>Pro</option>
+              <option value="agency">Agency</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="duration">Duration (Months)</label>
+            <input
+              type="number"
+              id="duration"
+              value="12"
+              min="1"
+              max="36"
+              required
+            />
+          </div>
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeCreateModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary">Create</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- License Details Modal -->
+    <div id="detailsModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>License Details</h2>
+          <button class="close-btn" onclick="closeDetailsModal()">
+            &times;
+          </button>
+        </div>
+        <div id="licenseDetails">
+          <!-- Details loaded here -->
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
