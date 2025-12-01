@@ -156,6 +156,35 @@ class LicenseModel {
     const result = await pool.query(query);
     return result.rows;
   }
+
+  /**
+   * Get licenses by user ID
+   */
+  static async getByUserId(userId) {
+    const query = `
+      SELECT l.*,
+        (SELECT COUNT(*) FROM activations a WHERE a.license_id = l.id) as activation_count
+      FROM licenses l
+      WHERE l.user_id = $1
+      ORDER BY l.created_at DESC
+    `;
+    const result = await pool.query(query, [userId]);
+    return result.rows;
+  }
+
+  /**
+   * Update license status
+   */
+  static async updateStatus(license_key, status) {
+    const query = `
+      UPDATE licenses
+      SET status = $1
+      WHERE license_key = $2
+      RETURNING *
+    `;
+    const result = await pool.query(query, [status, license_key]);
+    return result.rows[0];
+  }
 }
 
 module.exports = LicenseModel;

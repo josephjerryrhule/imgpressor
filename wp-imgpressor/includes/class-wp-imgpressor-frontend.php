@@ -121,7 +121,7 @@ class WP_ImgPressor_Frontend {
     }
 
     /**
-     * Filter HTML to replace img tags
+     * Filter HTML to replace img tags and background images
      */
     public function filter_html($html) {
         // Don't lazy load in feeds or previews
@@ -130,7 +130,16 @@ class WP_ImgPressor_Frontend {
         }
 
         // Find all img tags
-        return preg_replace_callback('/<img([^>]+)>/i', array($this, 'replace_image'), $html);
+        $html = preg_replace_callback('/<img([^>]+)>/i', array($this, 'replace_image'), $html);
+        
+        // Find all elements with inline background-image styles
+        $html = preg_replace_callback(
+            '/<([a-z][a-z0-9]*)\s+([^>]*?)style\s*=\s*["\']([^"\']*background-image\s*:\s*url\([^)]+\)[^"\']*)["\']([^>]*)>/i',
+            array($this, 'replace_background_image'),
+            $html
+        );
+        
+        return $html;
     }
 
     /**
@@ -187,6 +196,63 @@ class WP_ImgPressor_Frontend {
         }
 
         return '<img class="' . esc_attr($new_class) . '" ' . $new_attributes . '>';
+    }
+
+    /**
+     * Replace background-image in inline styles with lazy loading
+     */
+    private function replace_background_image($matches) {
+        $tag = $matches[1];
+        $before_style = $matches[2];
+        $style = $matches[3];
+        $after_style = $matches[4];
+        
+        // Skip if already has data-bg-src or class contains 'no-lazy'
+        if (strpos($before_style . $after_style, 'data-bg-src') !== false || 
+            strpos($before_style . $after_style, 'no-lazy') !== false) {
+            return $matches[0];
+        }
+        
+        // Extract background-image URL
+        if (preg_match('/background-image\s*:\s*url\(["\']?([^)"\']+)["\']?\)/i', $style, $url_match)) {
+            $bg_url = $url_match[1];
+            
+            // Remove background-image from style
+            $new_style = preg_replace('/background-image\s*:\s*url\([^)]+\)\s*;?/i', '', $style);
+            $new_style = trim($new_style);
+            
+            // Extract existing class
+            $class = '';
+            if (preg_match('/class\s*=\s*["\']([^"\']*)["\']/', $before_style . $after_style, $class_match)) {
+                $class = $class_match[1];
+            }
+            
+            // Add lazy background class
+            $new_class = trim($class . ' wp-imgpressor-bg-lazy');
+            
+            // Build new tag
+            $new_attrs = $before_style . $after_style;
+            
+            // Update or add class attribute
+            if (strpos($new_attrs, 'class=') !== false) {
+                $new_attrs = preg_replace('/class\s*=\s*["\']([^"\']*)["\']/', 'class="' . esc_attr($new_class) . '"', $new_attrs);
+            } else {
+                $new_attrs .= ' class="' . esc_attr($new_class) . '"';
+            }
+            
+            // Add data-bg-src attribute
+            $new_attrs .= ' data-bg-src="' . esc_attr($bg_url) . '"';
+            
+            // Build the new tag with modified style (if any remains) or without style
+            if (!empty($new_style)) {
+                return '<' . $tag . ' ' . $new_attrs . ' style="' . esc_attr($new_style) . '">';
+            } else {
+                // Remove style attribute if empty
+                return '<' . $tag . ' ' . $new_attrs . '>';
+            }
+        }
+        
+        return $matches[0];
     }
 
     /**

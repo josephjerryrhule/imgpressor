@@ -410,7 +410,20 @@ class LicenseController {
   static async list(req, res) {
     try {
       const License = require("../models/License");
-      const licenses = await License.getAll();
+      let licenses;
+
+      // If admin, show all. If user, show only theirs.
+      if (req.user && req.user.role === "admin") {
+        licenses = await License.getAll();
+      } else if (req.user) {
+        // We need to implement getByUserId in License model
+        licenses = await License.getByUserId(req.user.id);
+      } else {
+        return res.status(401).json({
+          success: false,
+          message: "Unauthorized",
+        });
+      }
 
       res.json({
         success: true,
@@ -426,14 +439,47 @@ class LicenseController {
   }
 
   /**
-   * Create a new license (Admin)
+   * Create a new license
    * POST /api/license/create
    */
   static async create(req, res) {
     try {
       const { email, tier = "starter", duration = 12 } = req.body;
 
-      if (!email) {
+      // Determine email and user_id based on who's creating the license
+      let userEmail = email;
+      let userId = null;
+
+      if (req.user) {
+        // If email is provided and matches the current user's email, use their user_id
+        if (email === req.user.email) {
+          userEmail = req.user.email;
+          userId = req.user.id;
+        } else if (req.user.role !== "admin") {
+          // Non-admin users can only create licenses for themselves
+          userEmail = req.user.email;
+          userId = req.user.id;
+        } else {
+          // Admin creating for someone else
+          if (email) {
+            const User = require("../models/User");
+            const user = await User.findByEmail(email);
+            if (user) {
+              userId = user.id;
+              userEmail = email;
+            } else {
+              // Email provided but user doesn't exist - still create license with email
+              userEmail = email;
+            }
+          } else {
+            // No email provided, use admin's own email
+            userEmail = req.user.email;
+            userId = req.user.id;
+          }
+        }
+      }
+
+      if (!userEmail) {
         return res.status(400).json({
           success: false,
           message: "Email is required",
@@ -453,10 +499,11 @@ class LicenseController {
 
       const license = await License.create({
         license_key: licenseKey,
-        user_email: email,
+        user_email: userEmail,
         tier: tier,
         max_activations: limits.max_activations || 1,
         expires_at: expiryDate,
+        user_id: userId,
       });
 
       res.json({
@@ -468,6 +515,65 @@ class LicenseController {
       res.status(500).json({
         success: false,
         message: "Internal server error",
+      });
+    }
+  }
+
+  /**
+   * Update license status
+   * PUT /api/license/update-status
+   */
+  static async updateStatus(req, res) {
+    try {
+      const { license_key, status } = req.body;
+
+      // Validate input
+      if (!license_key || !status) {
+        return res.status(400).json({
+          success: false,
+          message: "License key and status are required",
+        });
+      }
+
+      // Validate status
+      const validStatuses = [
+        "active",
+        "suspend",
+        "suspended",
+        "cancelled",
+        "expired",
+      ];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid status value",
+        });
+      }
+
+      // Find license
+      const license = await License.findByKey(license_key);
+
+      if (!license) {
+        return res.status(404).json({
+          success: false,
+          message: "License not found",
+        });
+      }
+
+      // Update status
+      await License.updateStatus(license_key, status);
+
+      return res.status(200).json({
+        success: true,
+        message: `License ${
+          status === "active" ? "activated" : "deactivated"
+        } successfully`,
+      });
+    } catch (error) {
+      console.error("Update license status error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to update license status",
       });
     }
   }

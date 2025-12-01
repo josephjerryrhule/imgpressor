@@ -398,68 +398,119 @@ class WP_ImgPressor_Admin {
                     </table>
                 </div>
 
-                <div class="card">
-                    <h2><?php _e('Performance Settings', 'wp-imgpressor'); ?></h2>
-                    <table class="form-table">
-                        <tr>
-                            <th scope="row"><?php _e('Lazy Load Images', 'wp-imgpressor'); ?></th>
-                            <td>
-                                <label class="switch">
-                                    <input type="checkbox" name="wp_imgpressor_settings[enable_lazy_load]" 
-                                           value="1" <?php checked(isset($options['enable_lazy_load']) ? $options['enable_lazy_load'] : false, true); ?>>
-                                    <span class="slider"></span>
-                                </label>
-                                <span class="description"><?php _e('Defer loading of off-screen images to improve page load speed.', 'wp-imgpressor'); ?></span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row"><label for="lazy_load_animation"><?php _e('Lazy Load Animation', 'wp-imgpressor'); ?></label></th>
-                            <td>
-                                <select name="wp_imgpressor_settings[lazy_load_animation]" id="lazy_load_animation">
-                                    <option value="fade" <?php selected(isset($options['lazy_load_animation']) ? $options['lazy_load_animation'] : 'fade', 'fade'); ?>><?php _e('Fade In', 'wp-imgpressor'); ?></option>
-                                    <option value="blur" <?php selected(isset($options['lazy_load_animation']) ? $options['lazy_load_animation'] : 'fade', 'blur'); ?>><?php _e('Blur Up', 'wp-imgpressor'); ?></option>
-                                    <option value="skeleton" <?php selected(isset($options['lazy_load_animation']) ? $options['lazy_load_animation'] : 'fade', 'skeleton'); ?>><?php _e('Skeleton', 'wp-imgpressor'); ?></option>
-                                </select>
-                                <p class="description"><?php _e('Choose the loading animation effect for lazy-loaded images.', 'wp-imgpressor'); ?></p>
-                                
-                                <!-- Animation Preview -->
-                                <div class="animation-preview-container" style="margin-top: 15px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
-                                    <p><strong><?php _e('Preview:', 'wp-imgpressor'); ?></strong></p>
-                                    <div class="animation-preview-box" style="width: 200px; height: 150px; background: #e0e0e0; position: relative; overflow: hidden; border-radius: 4px;">
-                                        <img class="preview-image" 
-                                             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='150'%3E%3Crect fill='%234A90E2' width='200' height='150'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='white'%3ESample Image%3C/text%3E%3C/svg%3E"
-                                             style="width: 100%; height: 100%; object-fit: cover; opacity: 0;"
-                                             alt="Preview">
+                </div><!-- #tab-general -->
+
+                <div id="tab-performance" class="wp-imgpressor-tab-content" style="display:none;">
+                    <div class="card">
+                        <h2><?php _e('Performance Settings', 'wp-imgpressor'); ?></h2>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><?php _e('Lazy Load Images', 'wp-imgpressor'); ?></th>
+                                <td>
+                                    <label class="switch">
+                                        <input type="checkbox" name="wp_imgpressor_settings[enable_lazy_load]" 
+                                               value="1" <?php checked(isset($options['enable_lazy_load']) ? $options['enable_lazy_load'] : false, true); ?>>
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="description"><?php _e('Defer loading of off-screen images to improve page load speed.', 'wp-imgpressor'); ?></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label for="lazy_load_animation"><?php _e('Lazy Load Animation', 'wp-imgpressor'); ?></label></th>
+                                <td>
+                                    <select name="wp_imgpressor_settings[lazy_load_animation]" id="lazy_load_animation">
+                                        <option value="fade" <?php selected(isset($options['lazy_load_animation']) ? $options['lazy_load_animation'] : 'fade', 'fade'); ?>><?php _e('Fade In', 'wp-imgpressor'); ?></option>
+                                        <option value="blur" <?php selected(isset($options['lazy_load_animation']) ? $options['lazy_load_animation'] : 'fade', 'blur'); ?>><?php _e('Blur Up', 'wp-imgpressor'); ?></option>
+                                        <option value="skeleton" <?php selected(isset($options['lazy_load_animation']) ? $options['lazy_load_animation'] : 'fade', 'skeleton'); ?>><?php _e('Skeleton', 'wp-imgpressor'); ?></option>
+                                    </select>
+                                    <p class="description"><?php _e('Choose the loading animation effect for lazy-loaded images.', 'wp-imgpressor'); ?></p>
+                                    
+                                    <!-- Animation Preview -->
+                                    <div class="animation-preview-container" style="margin-top: 15px; padding: 15px; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px;">
+                                        <p><strong><?php _e('Preview:', 'wp-imgpressor'); ?></strong></p>
+                                        <div class="animation-preview-box" style="width: 200px; height: 150px; background: #e0e0e0; position: relative; overflow: hidden; border-radius: 4px;">
+                                            <img class="preview-image" 
+                                                 src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='150'%3E%3Crect fill='%234A90E2' width='200' height='150'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='16' fill='white'%3ESample Image%3C/text%3E%3C/svg%3E"
+                                                 style="width: 100%; height: 100%; object-fit: cover; opacity: 0;"
+                                                 alt="Preview">
+                                        </div>
+                                        <button type="button" id="replay-animation" class="button button-small" style="margin-top: 10px;">
+                                            <?php _e('Replay Animation', 'wp-imgpressor'); ?>
+                                        </button>
                                     </div>
-                                    <button type="button" id="replay-animation" class="button button-small" style="margin-top: 10px;">
-                                        <?php _e('Replay Animation', 'wp-imgpressor'); ?>
-                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php _e('Add Missing Dimensions', 'wp-imgpressor'); ?></th>
+                                <td>
+                                    <label class="switch">
+                                        <input type="checkbox" name="wp_imgpressor_settings[add_dimensions]" 
+                                               value="1" <?php checked(isset($options['add_dimensions']) ? $options['add_dimensions'] : false, true); ?>>
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="description"><?php _e('Automatically add width and height attributes to reduce layout shifts (CLS).', 'wp-imgpressor'); ?></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php _e('Preload LCP Image', 'wp-imgpressor'); ?></th>
+                                <td>
+                                    <label class="switch">
+                                        <input type="checkbox" name="wp_imgpressor_settings[preload_lcp]" 
+                                               value="1" <?php checked(isset($options['preload_lcp']) ? $options['preload_lcp'] : false, true); ?>>
+                                        <span class="slider"></span>
+                                    </label>
+                                    <span class="description"><?php _e('Attempt to preload the Largest Contentful Paint image for better Core Web Vitals.', 'wp-imgpressor'); ?></span>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="tab-license" class="wp-imgpressor-tab-content" style="display:none;">
+                    <div class="card">
+                        <h2><?php _e('License Activation', 'wp-imgpressor'); ?></h2>
+                        <p class="description"><?php _e('Activate your license to unlock premium features.', 'wp-imgpressor'); ?></p>
+                        
+                        <?php 
+                        $license = new WP_ImgPressor_License();
+                        $license_data = $license->get_display_data();
+                        ?>
+                        
+                        <div class="license-status-area <?php echo $license_data['is_active'] ? 'active' : 'inactive'; ?>">
+                            <?php if ($license_data['is_active']): ?>
+                                <div class="license-active-details">
+                                    <div class="license-badge badge-<?php echo esc_attr($license_data['tier']); ?>">
+                                        <?php echo esc_html(ucfirst($license_data['tier'])); ?> Plan
+                                    </div>
+                                    <p><strong>Status:</strong> <span class="status-active">Active</span></p>
+                                    <p><strong>Expires:</strong> <?php echo $license_data['expires_at'] ? date_i18n(get_option('date_format'), strtotime($license_data['expires_at'])) : 'Never'; ?></p>
+                                    
+                                    <?php if ($license_data['quota']['monthly_limit'] > 0): ?>
+                                        <div class="quota-progress">
+                                            <p><strong>API Usage:</strong> <?php echo esc_html($license_data['quota']['used']); ?> / <?php echo esc_html($license_data['quota']['monthly_limit']); ?></p>
+                                            <progress value="<?php echo esc_attr($license_data['quota']['used']); ?>" max="<?php echo esc_attr($license_data['quota']['monthly_limit']); ?>"></progress>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <button type="button" id="deactivate-license-btn" class="button button-secondary">Deactivate License</button>
                                 </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row"><?php _e('Add Missing Dimensions', 'wp-imgpressor'); ?></th>
-                            <td>
-                                <label class="switch">
-                                    <input type="checkbox" name="wp_imgpressor_settings[add_dimensions]" 
-                                           value="1" <?php checked(isset($options['add_dimensions']) ? $options['add_dimensions'] : false, true); ?>>
-                                    <span class="slider"></span>
-                                </label>
-                                <span class="description"><?php _e('Automatically add width and height attributes to reduce layout shifts (CLS).', 'wp-imgpressor'); ?></span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row"><?php _e('Preload LCP Image', 'wp-imgpressor'); ?></th>
-                            <td>
-                                <label class="switch">
-                                    <input type="checkbox" name="wp_imgpressor_settings[preload_lcp]" 
-                                           value="1" <?php checked(isset($options['preload_lcp']) ? $options['preload_lcp'] : false, true); ?>>
-                                    <span class="slider"></span>
-                                </label>
-                                <span class="description"><?php _e('Attempt to preload the Largest Contentful Paint image for better Core Web Vitals.', 'wp-imgpressor'); ?></span>
-                            </td>
-                        </tr>
-                    </table>
+                            <?php else: ?>
+                                <div class="license-activation-form">
+                                    <table class="form-table">
+                                        <tr>
+                                            <th scope="row"><label for="license_key">License Key</label></th>
+                                            <td>
+                                                <input type="text" id="license_key" class="regular-text" placeholder="XXXX-XXXX-XXXX-XXXX">
+                                                <p class="description">Enter your license key received via email.</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <button type="button" id="activate-license-btn" class="button button-primary">Activate License</button>
+                                    <span class="spinner" style="float:none;"></span>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
 
                 <p class="submit">

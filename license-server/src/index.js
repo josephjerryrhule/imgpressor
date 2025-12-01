@@ -6,6 +6,8 @@ const path = require("path");
 require("dotenv").config();
 
 const licenseRoutes = require("./routes/license");
+const authRoutes = require("./routes/auth");
+const settingsRoutes = require("./routes/settings");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,7 +21,7 @@ app.use(
 );
 
 // Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "../public")));
 
 // CORS configuration
 const allowedOrigins = process.env.ALLOWED_ORIGINS
@@ -68,6 +70,8 @@ app.get("/health", (req, res) => {
 
 // API routes
 app.use("/api/license", licenseRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // API root endpoint
 app.get("/api", (req, res) => {

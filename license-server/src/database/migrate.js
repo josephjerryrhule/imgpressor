@@ -96,6 +96,32 @@ async function migrate() {
       CREATE INDEX IF NOT EXISTS idx_webhook_events_processed ON webhook_events(processed);
     `);
 
+    // Create users table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        full_name VARCHAR(255),
+        phone VARCHAR(255),
+        role VARCHAR(20) NOT NULL DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+    `);
+
+    // Add user_id to licenses if it doesn't exist
+    await client.query(`
+      DO $$
+      BEGIN
+          IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'licenses' AND column_name = 'user_id') THEN
+              ALTER TABLE licenses ADD COLUMN user_id INTEGER REFERENCES users(id);
+              CREATE INDEX idx_licenses_user ON licenses(user_id);
+          END IF;
+      END $$;
+    `);
+
     await client.query("COMMIT");
     console.log("✅ Database migration completed successfully");
   } catch (error) {

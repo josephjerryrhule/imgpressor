@@ -28,18 +28,30 @@ img.lazy-blur.wp-imgpressor-loaded {
 
 /* Skeleton Animation */
 img.lazy-skeleton.wp-imgpressor-lazy {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: wp-imgpressor-skeleton 1.5s infinite;
+  background-color: #e0e0e0;
+  animation: wp-imgpressor-skeleton 1.5s ease-in-out infinite;
   opacity: 1;
   min-height: 100px; /* Ensure visibility */
 }
 
 @keyframes wp-imgpressor-skeleton {
-  0% {
-    background-position: 200% 0;
+  0%, 100% {
+    background-color: #e0e0e0;
   }
-  100% {
-    background-position: -200% 0;
+  50% {
+    background-color: #505050;
   }
+}
+
+/* Background Image Lazy Loading */
+.wp-imgpressor-bg-lazy {
+  background-image: none !important;
+  background-color: #e0e0e0;
+  animation: wp-imgpressor-skeleton 1.5s ease-in-out infinite;
+  position: relative;
+}
+
+.wp-imgpressor-bg-lazy.wp-imgpressor-loaded {
+  animation: none;
+  background-color: transparent;
 }

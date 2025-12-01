@@ -3,7 +3,7 @@
  * Plugin Name: WP ImgPressor
  * Plugin URI: https://github.com/josephjerryrhule/imgpressor
  * Description: Automatically compress and convert uploaded images to WebP or AVIF format using PHP's native GD or Imagick libraries. Zero dependencies - works out-of-the-box! Now with faster compression and automatic format detection.
- * Version: 3.0.18
+ * Version: 5.0.2
  * Author: Joseph Jerry Rhule
  * Author URI: https://github.com/josephjerryrhule
  * License: MIT
@@ -19,7 +19,7 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('WP_IMGPRESSOR_VERSION', '3.0.18');
+define('WP_IMGPRESSOR_VERSION', '5.0.2');
 define('WP_IMGPRESSOR_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WP_IMGPRESSOR_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('WP_IMGPRESSOR_PLUGIN_BASENAME', plugin_basename(__FILE__));
@@ -69,6 +69,8 @@ require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-compressor
 require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-api.php';
 require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-frontend.php';
 require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-background-process.php';
+require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-license.php';
+require_once WP_IMGPRESSOR_PLUGIN_DIR . 'includes/class-wp-imgpressor-updater.php';
 
 /**
  * Initialize the plugin
@@ -78,3 +80,10 @@ function run_wp_imgpressor() {
     $plugin->run();
 }
 run_wp_imgpressor();
+
+/**
+ * Initialize updater
+ */
+if (is_admin()) {
+    new WP_ImgPressor_Updater(WP_IMGPRESSOR_PLUGIN_BASENAME);
+}

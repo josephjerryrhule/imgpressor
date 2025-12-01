@@ -434,13 +434,32 @@
     });
 
     // License Deactivation
-    $("#deactivate-license-btn").on("click", function () {
-      if (!confirm("Are you sure you want to deactivate this license?")) {
-        return;
-      }
+    // License Deactivation Modal
+    var modal = $("#deactivation-modal");
+    var btn = $("#deactivate-license-btn");
+    var close = $(".close-modal");
+    var confirmBtn = $("#confirm-deactivate-btn");
 
-      var btn = $(this);
-      btn.prop("disabled", true);
+    btn.on("click", function (e) {
+      e.preventDefault();
+      modal.show();
+      modal.css("display", "flex");
+    });
+
+    close.on("click", function () {
+      modal.hide();
+    });
+
+    $(window).on("click", function (event) {
+      if ($(event.target).is(modal)) {
+        modal.hide();
+      }
+    });
+
+    // Confirm Deactivation
+    confirmBtn.on("click", function () {
+      var $this = $(this);
+      $this.prop("disabled", true).text("Deactivating...");
 
       $.ajax({
         url: wpImgpressor.ajax_url,
@@ -453,13 +472,15 @@
           if (response.success) {
             location.reload();
           } else {
-            alert(response.data || "Deactivation failed");
-            btn.prop("disabled", false);
+            alert(response.data.message || "Deactivation failed");
+            $this.prop("disabled", false).text("Deactivate");
+            modal.hide();
           }
         },
         error: function () {
-          alert("Connection error");
-          btn.prop("disabled", false);
+          alert("Network error");
+          $this.prop("disabled", false).text("Deactivate");
+          modal.hide();
         },
       });
     });

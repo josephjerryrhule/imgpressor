@@ -3,179 +3,789 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>License Manager</title>
+    <title>WP ImgPressor - License Manager</title>
     <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.6/build/css/intlTelInput.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <div class="container">
-      <!-- Header -->
-      <header class="header">
-        <div class="header-content">
-          <h1>License Manager</h1>
-          <p>Manage subscriptions and activations</p>
+    <!-- Authentication View -->
+    <div id="auth-view" class="view-section active">
+      <div class="auth-container">
+        <div class="brand-logo">
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          <h1>WP ImgPressor</h1>
         </div>
-        <button class="btn btn-primary" onclick="showCreateModal()">
-          Create License
-        </button>
-      </header>
 
-      <!-- Stats Cards -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-header">
-            <span class="stat-title">Total Licenses</span>
-            <span class="stat-icon">📄</span>
-          </div>
-          <div class="stat-value" id="totalLicenses">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header">
-            <span class="stat-title">Active Licenses</span>
-            <span class="stat-icon">✅</span>
-          </div>
-          <div class="stat-value" id="activeLicenses">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header">
-            <span class="stat-title">Total Activations</span>
-            <span class="stat-icon">🌐</span>
-          </div>
-          <div class="stat-value" id="totalActivations">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-header">
-            <span class="stat-title">Monthly Revenue</span>
-            <span class="stat-icon">💰</span>
-          </div>
-          <div class="stat-value" id="monthlyRevenue">$0</div>
-        </div>
-      </div>
+        <!-- Login Card -->
+        <div id="login-card" class="auth-card">
+          <h2>Welcome Back</h2>
+          <p class="auth-subtitle">Sign in to manage your licenses</p>
 
-      <!-- Search and Filter -->
-      <div class="toolbar">
-        <input
-          type="text"
-          id="searchInput"
-          class="search-input"
-          placeholder="Search licenses..."
-        />
-        <select id="tierFilter" class="filter-select">
-          <option value="">All Tiers</option>
-          <option value="free">Free</option>
-          <option value="starter">Starter</option>
-          <option value="pro">Pro</option>
-          <option value="agency">Agency</option>
-        </select>
-        <select id="statusFilter" class="filter-select">
-          <option value="">All Status</option>
-          <option value="active">Active</option>
-          <option value="expired">Expired</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-      </div>
+          <form id="login-form">
+            <div class="form-group">
+              <label for="login-email">Email Address</label>
+              <input
+                type="email"
+                id="login-email"
+                required
+                placeholder="name@company.com"
+              />
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input
+                type="password"
+                id="login-password"
+                required
+                placeholder="••••••••"
+              />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              Sign In
+            </button>
+          </form>
 
-      <!-- Licenses Table -->
-      <div class="card">
-        <div class="card-header">
-          <h2>Licenses</h2>
-          <button class="btn btn-secondary btn-small" onclick="loadLicenses()">
-            Refresh
-          </button>
+          <p class="auth-footer">
+            Don't have an account? <a href="#" id="show-register">Create one</a>
+          </p>
         </div>
-        <div class="table-container">
-          <table class="licenses-table">
-            <thead>
-              <tr>
-                <th>License Key</th>
-                <th>Email</th>
-                <th>Tier</th>
-                <th>Status</th>
-                <th>Activations</th>
-                <th>Expires</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="licensesTableBody">
-              <tr>
-                <td colspan="7" class="empty-state">
-                  <div class="empty-icon">⟳</div>
-                  <p>Loading licenses...</p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+
+        <!-- Register Card -->
+        <div id="register-card" class="auth-card" style="display: none">
+          <h2>Create Account</h2>
+          <p class="auth-subtitle">Get started with WP ImgPressor</p>
+
+          <form id="register-form">
+            <div class="form-group">
+              <label for="register-name">Full Name</label>
+              <input
+                type="text"
+                id="register-name"
+                required
+                placeholder="John Doe"
+              />
+            </div>
+            <div class="form-group">
+              <label for="register-email">Email Address</label>
+              <input
+                type="email"
+                id="register-email"
+                required
+                placeholder="name@company.com"
+              />
+            </div>
+            <div class="form-group">
+              <label for="register-phone">Phone Number (Optional)</label>
+              <input
+                type="tel"
+                id="register-phone"
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+            <div class="form-group">
+              <label for="register-password">Password</label>
+              <input
+                type="password"
+                id="register-password"
+                required
+                placeholder="••••••••"
+              />
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              Create Account
+            </button>
+          </form>
+
+          <p class="auth-footer">
+            Already have an account? <a href="#" id="show-login">Sign in</a>
+          </p>
         </div>
       </div>
     </div>
 
+    <!-- Dashboard Layout -->
+    <div
+      id="dashboard-layout"
+      class="dashboard-container"
+      style="display: none"
+    >
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="brand-logo small">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <span>ImgPressor</span>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a href="#" class="nav-item active" data-view="overview">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Overview
+          </a>
+          <a href="#" class="nav-item" data-view="licenses">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Licenses
+          </a>
+          <a
+            href="#"
+            class="nav-item admin-only"
+            data-view="users"
+            style="display: none"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+            Users
+          </a>
+          <a
+            href="#"
+            class="nav-item admin-only"
+            data-view="finance"
+            style="display: none"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path
+                d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
+              ></path>
+            </svg>
+            Finance
+          </a>
+          <a href="#" class="nav-item" data-view="settings">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="3"></circle>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              ></path>
+            </svg>
+            Settings
+          </a>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="user-info">
+            <div class="user-avatar" id="user-initials">JD</div>
+            <div class="user-details">
+              <span class="user-name" id="user-name">John Doe</span>
+              <span class="user-email" id="user-email">john@example.com</span>
+            </div>
+          </div>
+          <button id="logout-btn" class="logout-btn" title="Logout">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Overview View -->
+        <div id="view-overview" class="view-section">
+          <header class="view-header">
+            <h2>Overview</h2>
+          </header>
+
+          <!-- Admin Stats (shown for admins only) -->
+          <div id="admin-stats" style="display: none">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <h3>Total Licenses</h3>
+                <p class="stat-value" id="stat-total-licenses">0</p>
+              </div>
+              <div class="stat-card">
+                <h3>Active Licenses</h3>
+                <p class="stat-value" id="stat-active-licenses">0</p>
+              </div>
+              <div class="stat-card">
+                <h3>Total Users</h3>
+                <p class="stat-value" id="stat-total-users">0</p>
+              </div>
+              <div class="stat-card">
+                <h3>Expired Licenses</h3>
+                <p class="stat-value" id="stat-expired-licenses">0</p>
+              </div>
+            </div>
+
+            <div class="content-card">
+              <h3>Recent License Activity</h3>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Date & Time</th>
+                      <th>Tier</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-licenses-body">
+                    <tr>
+                      <td colspan="4" class="text-center">Loading...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Stats (shown for regular users) -->
+          <div id="user-stats">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <h3>Current Plan</h3>
+                <p class="stat-value" id="current-plan">Loading...</p>
+              </div>
+              <div class="stat-card">
+                <h3>Status</h3>
+                <p class="stat-value" id="license-status">Loading...</p>
+              </div>
+            </div>
+
+            <div class="content-card">
+              <h3>License Details</h3>
+              <div id="user-license-details">
+                <p>Loading license information...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Licenses View -->
+        <div id="view-licenses" class="view-section" style="display: none">
+          <header class="view-header">
+            <h2>My Licenses</h2>
+            <button class="btn btn-primary" onclick="showCreateModal()">
+              New License
+            </button>
+          </header>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>License Key</th>
+                  <th>User</th>
+                  <th>Tier</th>
+                  <th>Status</th>
+                  <th>Expires</th>
+                  <th>Activations</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="licenses-table-body">
+                <!-- Licenses loaded here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Users View (Admin Only) -->
+        <div id="view-users" class="view-section" style="display: none">
+          <header class="view-header">
+            <h2>User Management</h2>
+            <button class="btn btn-primary" onclick="showCreateUserModal()">
+              New User
+            </button>
+          </header>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Joined</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body">
+                <!-- Users loaded here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Finance View (Admin Only) -->
+        <div id="view-finance" class="view-section" style="display: none">
+          <header class="view-header">
+            <h2>Finance & Transactions</h2>
+          </header>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>Total Revenue</h3>
+              <p class="stat-value" id="stat-total-revenue">$0</p>
+            </div>
+            <div class="stat-card">
+              <h3>This Month</h3>
+              <p class="stat-value" id="stat-month-revenue">$0</p>
+            </div>
+            <div class="stat-card">
+              <h3>Total Transactions</h3>
+              <p class="stat-value" id="stat-total-transactions">0</p>
+            </div>
+          </div>
+
+          <div class="content-card">
+            <h3>All Transactions</h3>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Transaction ID</th>
+                    <th>User</th>
+                    <th>Date & Time</th>
+                    <th>Tier</th>
+                    <th>Duration</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="transactions-table-body">
+                  <tr>
+                    <td colspan="7" class="text-center">Loading...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings View -->
+        <div id="view-settings" class="view-section" style="display: none">
+          <header class="view-header">
+            <h2>Account Settings</h2>
+          </header>
+          <div class="content-card">
+            <form id="profile-form">
+              <div class="form-group">
+                <label for="profile-name">Full Name</label>
+                <input type="text" id="profile-name" placeholder="John Doe" />
+              </div>
+              <div class="form-group">
+                <label for="profile-email">Email Address</label>
+                <input
+                  type="email"
+                  id="profile-email"
+                  placeholder="john@example.com"
+                  disabled
+                />
+                <small style="color: #6b7280">Email cannot be changed</small>
+              </div>
+              <div class="form-group">
+                <label for="profile-password">New Password (optional)</label>
+                <input
+                  type="password"
+                  id="profile-password"
+                  placeholder="Leave blank to keep current password"
+                />
+              </div>
+              <div class="form-group">
+                <label for="profile-phone">Phone Number</label>
+                <input
+                  type="tel"
+                  id="profile-phone"
+                  placeholder="+1 (555) 123-4567"
+                />
+              </div>
+              <button type="submit" class="btn-primary">Save Changes</button>
+            </form>
+          </div>
+
+          <!-- Payment Gateway Settings (Admin Only) -->
+          <div class="content-card admin-only" style="margin-top: 2rem">
+            <h3>Payment Gateway Settings</h3>
+            <form id="payment-settings-form">
+              <div class="form-group">
+                <label for="payment-gateway">Payment Gateway</label>
+                <select id="payment-gateway" required>
+                  <option value="">Select Payment Gateway</option>
+                  <option value="stripe">Stripe</option>
+                  <option value="paystack">Paystack</option>
+                  <option value="paypal">PayPal</option>
+                </select>
+              </div>
+              
+              <!-- Stripe Settings -->
+              <div id="stripe-settings" class="gateway-settings" style="display: none">
+                <div class="form-group">
+                  <label for="stripe-publishable-key">Stripe Publishable Key</label>
+                  <input type="text" id="stripe-publishable-key" placeholder="pk_live_..." />
+                </div>
+                <div class="form-group">
+                  <label for="stripe-secret-key">Stripe Secret Key</label>
+                  <input type="password" id="stripe-secret-key" placeholder="sk_live_..." />
+                </div>
+              </div>
+
+              <!-- Paystack Settings -->
+              <div id="paystack-settings" class="gateway-settings" style="display: none">
+                <div class="form-group">
+                  <label for="paystack-public-key">Paystack Public Key</label>
+                  <input type="text" id="paystack-public-key" placeholder="pk_live_..." />
+                </div>
+                <div class="form-group">
+                  <label for="paystack-secret-key">Paystack Secret Key</label>
+                  <input type="password" id="paystack-secret-key" placeholder="sk_live_..." />
+                </div>
+              </div>
+
+              <!-- PayPal Settings -->
+              <div id="paypal-settings" class="gateway-settings" style="display: none">
+                <div class="form-group">
+                  <label for="paypal-client-id">PayPal Client ID</label>
+                  <input type="text" id="paypal-client-id" placeholder="AXt..." />
+                </div>
+                <div class="form-group">
+                  <label for="paypal-secret">PayPal Secret</label>
+                  <input type="password" id="paypal-secret" placeholder="EL_..." />
+                </div>
+                <div class="form-group">
+                  <label for="paypal-mode">PayPal Mode</label>
+                  <select id="paypal-mode">
+                    <option value="sandbox">Sandbox (Testing)</option>
+                    <option value="live">Live (Production)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary">Save Payment Settings</button>
+            </form>
+          </div>
+
+          <!-- Pricing Tiers Management (Admin Only) -->
+          <div class="content-card admin-only" style="margin-top: 2rem">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem">
+              <h3>Pricing Tiers</h3>
+              <button class="btn-primary" onclick="showCreateTierModal()">Add New Tier</button>
+            </div>
+            <div id="tiers-list">
+              <p style="color: #6b7280">Loading pricing tiers...</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
     <!-- Create License Modal -->
-    <div id="createModal" class="modal">
+    <div id="create-license-modal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>Create License</h2>
+          <h3>Create New License</h3>
           <button class="close-btn" onclick="closeCreateModal()">
             &times;
           </button>
         </div>
-        <form id="createLicenseForm" onsubmit="createLicense(event)">
+        <form id="create-license-form">
           <div class="form-group">
-            <label for="userEmail">Email</label>
-            <input
-              type="email"
-              id="userEmail"
-              required
-              placeholder="user@example.com"
-            />
-          </div>
-          <div class="form-group">
-            <label for="tier">Tier</label>
-            <select id="tier" required>
-              <option value="free">Free</option>
-              <option value="starter">Starter</option>
-              <option value="pro" selected>Pro</option>
-              <option value="agency">Agency</option>
+            <label for="license-tier">Tier</label>
+            <select id="license-tier" required>
+              <option value="">Loading tiers...</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="duration">Duration (Months)</label>
+            <label for="license-duration">Duration (months)</label>
             <input
               type="number"
-              id="duration"
+              id="license-duration"
               value="12"
               min="1"
               max="36"
               required
             />
           </div>
-          <div class="form-actions">
+          <div id="license-price-display" style="padding: 1rem; background: #f3f4f6; border-radius: 8px; margin-bottom: 1rem; display: none">
+            <p style="margin: 0; color: #374151"><strong>Total Price:</strong> <span id="calculated-price">$0.00</span></p>
+          </div>
+          <div class="modal-footer">
             <button
               type="button"
-              class="btn btn-secondary"
+              class="btn-secondary"
               onclick="closeCreateModal()"
             >
               Cancel
             </button>
-            <button type="submit" class="btn btn-primary">Create</button>
+            <button type="submit" class="btn-primary">Create License</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- License Details Modal -->
-    <div id="detailsModal" class="modal">
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>License Details</h2>
-          <button class="close-btn" onclick="closeDetailsModal()">
+          <h3>Edit User</h3>
+          <button class="close-btn" onclick="closeEditUserModal()">
             &times;
           </button>
         </div>
-        <div id="licenseDetails">
-          <!-- Details loaded here -->
+        <form id="edit-user-form">
+          <input type="hidden" id="edit-user-id" />
+          <div class="form-group">
+            <label for="edit-user-name">Full Name</label>
+            <input type="text" id="edit-user-name" required />
+          </div>
+          <div class="form-group">
+            <label for="edit-user-email">Email</label>
+            <input type="email" id="edit-user-email" required />
+          </div>
+          <div class="form-group">
+            <label for="edit-user-role">Role</label>
+            <select id="edit-user-role" required>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="closeEditUserModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Create/Edit Tier Modal -->
+    <div id="tier-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="tier-modal-title">Create Pricing Tier</h3>
+          <button class="close-btn" onclick="closeTierModal()">
+            &times;
+          </button>
+        </div>
+        <form id="tier-form">
+          <input type="hidden" id="tier-id" />
+          <div class="form-group">
+            <label for="tier-name">Tier Name</label>
+            <input
+              type="text"
+              id="tier-name"
+              required
+              placeholder="e.g., Starter, Pro, Enterprise"
+            />
+          </div>
+          <div class="form-group">
+            <label for="tier-price">Monthly Price ($)</label>
+            <input
+              type="number"
+              id="tier-price"
+              step="0.01"
+              min="0"
+              required
+              placeholder="29.99"
+            />
+          </div>
+          <div class="form-group">
+            <label for="tier-description">Description</label>
+            <textarea
+              id="tier-description"
+              rows="3"
+              placeholder="Brief description of the tier features"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="tier-features">Features (one per line)</label>
+            <textarea
+              id="tier-features"
+              rows="5"
+              placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
+            ></textarea>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="closeTierModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">Save Tier</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Create User Modal -->
+    <div id="create-user-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Create New User</h3>
+          <button class="close-btn" onclick="closeCreateUserModal()">
+            &times;
+          </button>
+        </div>
+        <form id="create-user-form" onsubmit="createUser(event)">
+          <div class="form-group">
+            <label for="new-user-fullname">Full Name</label>
+            <input
+              type="text"
+              id="new-user-fullname"
+              required
+              placeholder="John Doe"
+            />
+          </div>
+          <div class="form-group">
+            <label for="new-user-email">Email</label>
+            <input
+              type="email"
+              id="new-user-email"
+              required
+              placeholder="user@example.com"
+            />
+          </div>
+          <div class="form-group">
+            <label for="new-user-password">Password</label>
+            <input
+              type="password"
+              id="new-user-password"
+              required
+              placeholder="Minimum 8 characters"
+              minlength="8"
+            />
+          </div>
+          <div class="form-group">
+            <label for="new-user-role">Role</label>
+            <select id="new-user-role" required>
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn-secondary"
+              onclick="closeCreateUserModal()"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">Create User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Confirm Status Change Modal -->
+    <div id="confirm-status-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="confirm-status-title">Confirm Action</h3>
+          <button class="close-btn" onclick="closeConfirmStatusModal()">
+            &times;
+          </button>
+        </div>
+        <div style="padding: 1rem 0">
+          <p id="confirm-status-message">Are you sure you want to proceed?</p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-secondary"
+            onclick="closeConfirmStatusModal()"
+          >
+            Cancel
+          </button>
+          <button type="button" class="btn-primary" id="confirm-status-btn">
+            Confirm
+          </button>
         </div>
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@19.5.6/build/js/intlTelInput.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
