@@ -26,6 +26,15 @@ const upload = multer({
   },
 });
 
+// Optional multer middleware - only applies when Content-Type is multipart/form-data
+const optionalUpload = (req, res, next) => {
+  const contentType = req.headers['content-type'] || '';
+  if (contentType.includes('multipart/form-data')) {
+    return upload.single('image')(req, res, next);
+  }
+  next();
+};
+
 // Cloudflare IP detection utility
 const getRealIP = (req) => {
   return (
@@ -593,6 +602,194 @@ app.post("/process", upload.array("images", 10), async (req, res) => {
   }
 });
 
+// Alias route for /api/process (handles frontend requests to /api/process)
+app.post("/api/process", upload.array("images", 10), async (req, res) => {
+  console.log("POST /api/process - Forwarding to /process handler");
+  console.log("Files:", req.files ? req.files.length : 0);
+  console.log("Body URL:", req.body.url || "none");
+
+  try {
+    const quality = req.body.quality || 80;
+    const format = req.body.format || "webp";
+    let results = [];
+
+    console.log("Processing with format:", format, "quality:", quality);
+
+    if (req.files && req.files.length > 0) {
+      // Process uploaded files using Canvas API (no file storage)
+      for (const file of req.files) {
+        const result = await processImageInMemory(
+          file.buffer,
+          file.originalname,
+          quality,
+          format
+        );
+        results.push(result);
+      }
+    } else if (req.body.url) {
+      // Process URL using Canvas API
+      const originalBuffer = await downloadImage(req.body.url);
+      const result = await processImageInMemory(
+        originalBuffer,
+        "url_image.jpg",
+        quality,
+        format,
+        req.body.url
+      );
+      results.push(result);
+    } else {
+      return res
+        .status(400)
+        .send(
+          '<h1>Error: Please provide images or a URL.</h1><a href="/">Go back</a>'
+        );
+    }
+
+    // Handle single file direct download if requested via AJAX
+    if (
+      req.headers.accept &&
+      req.headers.accept.includes("application/json") &&
+      results.length === 1
+    ) {
+      const result = results[0];
+
+      // Return the compressed image directly as binary data
+      const base64Data = result.downloadUrl.split(",")[1];
+      const imageBuffer = Buffer.from(base64Data, "base64");
+
+      const mimeTypes = {
+        webp: "image/webp",
+        avif: "image/avif",
+        jpeg: "image/jpeg",
+        jpg: "image/jpeg",
+        png: "image/png",
+      };
+
+      res.setHeader("Content-Type", mimeTypes[result.format] || "image/webp");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${result.name.split(".")[0]}_compressed.${
+          result.format
+        }"`
+      );
+      return res.send(imageBuffer);
+    }
+
+    // Generate result page
+    const resultItems = results
+      .map(
+        (result) => `
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">${
+                  result.name
+                }</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-2">Original</p>
+                        <img src="${
+                          result.originalPreview
+                        }" alt="Original" class="w-full h-32 object-cover rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1">${(
+                          result.originalSize / 1024
+                        ).toFixed(2)} KB</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 mb-2">Optimized (${
+                          result.format?.toUpperCase() || "WebP"
+                        })</p>
+                        <img src="${
+                          result.downloadUrl
+                        }" alt="Optimized" class="w-full h-32 object-cover rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1">${(
+                          result.optimizedSize / 1024
+                        ).toFixed(2)} KB</p>
+                    </div>
+                </div>
+                <p class="text-sm text-green-600 font-medium">Saved: ${(
+                  result.savedBytes / 1024
+                ).toFixed(2)} KB (${result.savedPercentage}%)</p>
+                <a href="${result.downloadUrl}" download="${
+          result.optimizedFilename
+        }" class="mt-2 inline-block btn-success text-sm py-2 px-4">
+                    Download
+                </a>
+            </div>
+        `
+      )
+      .join("");
+
+    const totalSaved = results.reduce((sum, r) => sum + r.savedBytes, 0);
+    const totalOriginal = results.reduce((sum, r) => sum + r.originalSize, 0);
+    const totalPercentage = ((totalSaved / totalOriginal) * 100).toFixed(2);
+
+    // Create session ID for download all functionality
+    const sessionId = crypto.randomBytes(16).toString("hex");
+
+    // Store results in temporary file for download all
+    const tempDir = path.join(__dirname, "temp");
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+    fs.writeFileSync(
+      path.join(tempDir, `${sessionId}.json`),
+      JSON.stringify(results)
+    );
+
+    // Download all button (only show if more than one image)
+    const downloadAllButton =
+      results.length > 1
+        ? `
+            <a href="/download-all/${sessionId}" class="btn-purple inline-block mr-4 py-2 px-6">
+                Download All as ZIP
+            </a>
+        `
+        : "";
+
+    const resultHtml = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Compression Results</title>
+                <link rel="stylesheet" href="/styles.css">
+            </head>
+            <body class="bg-gray-100 min-h-screen py-8">
+                <div class="max-w-6xl mx-auto px-4">
+                    <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Images Compressed Successfully!</h1>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center mb-8">
+                        <h2 class="text-2xl font-semibold mb-4 text-gray-800">Total Results</h2>
+                        <p class="text-lg"><strong>Total Space Saved:</strong> ${(
+                          totalSaved / 1024
+                        ).toFixed(2)} KB</p>
+                        <p class="text-lg"><strong>Average Savings:</strong> ${totalPercentage}%</p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                        ${resultItems}
+                    </div>
+                    
+                    <div class="text-center">
+                        ${downloadAllButton}
+                        <a href="/" class="btn-primary inline-block py-2 px-6">
+                            Compress More Images
+                        </a>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+
+    res.send(resultHtml);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .send(`<h1>Error: ${error.message}</h1><a href="/">Go back</a>`);
+  }
+});
+
 // Download all route (updated for Canvas API approach)
 app.get("/download-all/:sessionId", async (req, res) => {
   try {
@@ -670,6 +867,225 @@ async function processImage(
   // Use the Canvas API processing function directly
   return await processImageInMemory(buffer, filename, quality, format, url);
 }
+
+/**
+ * POST /api/upload
+ * Upload an image (file or URL) and receive metadata with conversion options
+ * 
+ * Usage with file:
+ * const formData = new FormData();
+ * formData.append('image', fileInput.files[0]);
+ * 
+ * fetch('/api/upload', {
+ *   method: 'POST',
+ *   body: formData
+ * })
+ * 
+ * Usage with URL:
+ * const formData = new FormData();
+ * formData.append('url', 'https://example.com/image.jpg');
+ * 
+ * fetch('/api/upload', {
+ *   method: 'POST',
+ *   body: formData
+ * })
+ * 
+ * OR with JSON:
+ * fetch('/api/upload', {
+ *   method: 'POST',
+ *   headers: { 'Content-Type': 'application/json' },
+ *   body: JSON.stringify({ url: 'https://example.com/image.jpg' })
+ * })
+ * 
+ * Response includes:
+ * - image metadata (width, height, format, size)
+ * - base64 preview
+ * - sessionId for later conversion
+ * - available conversion formats
+ */
+app.post("/api/upload", optionalUpload, async (req, res) => {
+  console.log("POST /api/upload - Request received");
+  console.log("Content-Type:", req.headers['content-type']);
+
+  try {
+    let buffer;
+    let filename;
+
+    // Check if image file was uploaded
+    if (req.file) {
+      buffer = req.file.buffer;
+      filename = req.file.originalname;
+    }
+    // Check if URL was provided (FormData or JSON)
+    else if (req.body.url) {
+      console.log("Downloading image from URL:", req.body.url);
+      try {
+        buffer = await downloadImage(req.body.url);
+        filename = req.body.url.split("/").pop() || "url_image";
+      } catch (error) {
+        return res.status(400).json({
+          success: false,
+          error: `Failed to download image from URL: ${error.message}`,
+        });
+      }
+    }
+    // No file or URL provided
+    else {
+      return res.status(400).json({
+        success: false,
+        error: "No image file or URL provided. Please provide either 'image' file or 'url' parameter.",
+      });
+    }
+
+    // Get image metadata using Sharp
+    const metadata = await sharp(buffer).metadata();
+
+    // Generate base64 preview of original
+    const originalBase64 = buffer.toString("base64");
+    const originalMimeType = `image/${metadata.format}`;
+
+    // Prepare response with metadata and conversion options
+    const response = {
+      success: true,
+      image: {
+        filename: filename,
+        originalFormat: metadata.format,
+        width: metadata.width,
+        height: metadata.height,
+        size: buffer.length,
+        sizeKB: (buffer.length / 1024).toFixed(2),
+        hasAlpha: metadata.hasAlpha,
+        orientation: metadata.orientation,
+        preview: `data:${originalMimeType};base64,${originalBase64}`,
+      },
+      conversionOptions: {
+        formats: ["webp", "avif", "jpeg", "png"],
+        qualityRange: { min: 10, max: 100, default: 80 },
+      },
+      // Include a session ID for future conversion requests
+      sessionId: crypto.randomBytes(16).toString("hex"),
+    };
+
+    // Temporarily store the buffer in memory cache for conversion
+    // (In production, consider using Redis or a proper cache)
+    if (!global.imageCache) {
+      global.imageCache = new Map();
+    }
+    global.imageCache.set(response.sessionId, {
+      buffer: buffer,
+      filename: filename,
+      uploadedAt: Date.now(),
+    });
+
+    // Auto-cleanup after 10 minutes
+    setTimeout(() => {
+      global.imageCache.delete(response.sessionId);
+    }, 600000);
+
+    res.json(response);
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * POST /api/convert
+ * Convert a previously uploaded image to specified format
+ * 
+ * Usage:
+ * fetch('/api/convert', {
+ *   method: 'POST',
+ *   headers: { 'Content-Type': 'application/json' },
+ *   body: JSON.stringify({
+ *     sessionId: 'abc123...', // from /api/upload response
+ *     format: 'webp',         // 'webp', 'avif', 'jpeg', 'png'
+ *     quality: 80             // 10-100
+ *   })
+ * })
+ * .then(res => res.json())
+ * .then(data => {
+ *   console.log('Converted image:', data.result.preview);
+ *   console.log('Saved:', data.result.savedPercentage + '%');
+ * });
+ * 
+ * Response includes:
+ * - converted image preview (base64)
+ * - size comparison stats
+ * - savings percentage
+ * - suggested download filename
+ */
+app.post("/api/convert", async (req, res) => {
+  console.log("POST /api/convert - Request received");
+
+  try {
+    const { sessionId, format = "webp", quality = 80 } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({
+        success: false,
+        error: "Session ID is required",
+      });
+    }
+
+    // Retrieve cached image buffer
+    if (!global.imageCache || !global.imageCache.has(sessionId)) {
+      return res.status(404).json({
+        success: false,
+        error: "Image session not found or expired. Please upload again.",
+      });
+    }
+
+    const cached = global.imageCache.get(sessionId);
+    const buffer = cached.buffer;
+    const filename = cached.filename;
+
+    // Validate format
+    const allowedFormats = ["webp", "avif", "jpeg", "jpg", "png"];
+    if (!allowedFormats.includes(format.toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid format. Allowed formats: ${allowedFormats.join(", ")}`,
+      });
+    }
+
+    // Process the image
+    const processed = await processImageInMemoryBase(buffer, quality, format);
+    const optimizedBuffer = Buffer.from(processed.buffer);
+
+    // Calculate stats
+    const originalSize = buffer.length;
+    const optimizedSize = optimizedBuffer.length;
+    const savedBytes = originalSize - optimizedSize;
+    const savedPercentage = ((savedBytes / originalSize) * 100).toFixed(2);
+
+    // Create base64 for preview
+    const base64Data = optimizedBuffer.toString("base64");
+    const mimeType = `image/${processed.format}`;
+
+    res.json({
+      success: true,
+      format: processed.format,
+      quality: quality,
+      preview: `data:${mimeType};base64,${base64Data}`,
+      originalSize: originalSize,
+      convertedSize: optimizedSize,
+      savedBytes: savedBytes,
+      savedPercentage: savedPercentage,
+      originalFilename: filename,
+      downloadFilename: `${filename.split(".")[0]}_${processed.format}.${processed.format}`,
+    });
+  } catch (error) {
+    console.error("Convert error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
 
 // Error handling middleware
 app.use((req, res, next) => {
@@ -967,10 +1383,12 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log(`🧹 Automatic cleanup enabled (every 30 minutes)`);
   console.log(`Available routes:`);
   console.log(`  GET  / - Main page`);
-  console.log(`  POST /process - Image processing`);
+  console.log(`  POST /process - Image processing (legacy)`);
   console.log(
     `  POST /api/process - Image processing (Cloudflare Pages compatibility)`
   );
+  console.log(`  POST /api/upload - Upload image and get metadata`);
+  console.log(`  POST /api/convert - Convert uploaded image to format`);
   console.log(`  GET  /health - Health check`);
   console.log(`  GET  /storage-status - Storage monitoring`);
   console.log(`  GET  /download-all/:sessionId - Download ZIP`);
