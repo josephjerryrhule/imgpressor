@@ -1,109 +1,147 @@
-# 🖼️ ImgPressor - Image Compression Web App
+# 🖼️ ImgPressor - Image Compression Platform
 
-A fast, production-ready image compression service that optimizes images with support for multiple formats and batch processing.
+A complete image optimization platform with web app and WordPress plugin. Powered by Sharp for high-performance image processing.
+
+## 🎯 What is ImgPressor?
+
+ImgPressor is a **dual-purpose image compression platform**:
+
+1. **Web Application** - Standalone image compression service
+2. **WordPress Plugin** - Automatic image optimization for WordPress sites
+3. **License Server** - Manage licenses and subscriptions
 
 ## ✨ Features
 
+### Web App
 - 🖼️ **Multiple format support** - WebP, AVIF, JPEG, PNG
 - 📦 **Batch processing** - Upload multiple images at once
 - 🔗 **URL processing** - Compress images from any web source
 - 🎯 **Quality control** - Adjustable compression quality (10-100%)
 - 📏 **Smart resizing** - Automatic optimization for web use
-- 📊 **Progress tracking** - Real-time compression status
-- 🎨 **Modern UI** - Responsive design with TailwindCSS
-- 🧹 **Auto cleanup** - Automatic temporary file management
-- 🔒 **Production ready** - Rate limiting, CORS, security headers
+- 📊 **Real-time progress** - Live compression feedback
+- 🚀 **Powered by Sharp** - Ultra-fast libvips-based processing
+
+### WordPress Plugin
+- 🔄 **Auto-compression** - Compress images on upload
+- 🎨 **Format conversion** - WebP/AVIF support
+- ⚡ **Lazy loading** - Background images + regular images
+- 📱 **Responsive** - Automatic dimension detection
+- 🌐 **CDN support** - Built-in CDN URL rewriting
+- 💾 **Zero dependencies** - Uses native PHP GD/Imagick
 
 ## 🚀 Quick Start
 
-### Development
+### Web Application
+
+#### Development
 ```bash
-# Install dependencies
 npm install
-
-# Build CSS
 npm run build
-
-# Start development server
 npm run dev
 ```
 
-### Production Deployment
-
-#### Option 1: Auto-Deploy from GitHub Releases (Recommended)
+#### Production
 ```bash
-# One-line installer (downloads and deploys latest release)
+# Auto-deploy latest release
 curl -sSL https://raw.githubusercontent.com/josephjerryrhule/imgpressor/master/scripts/install.sh | bash
 
-# Or with wget
-wget -qO- https://raw.githubusercontent.com/josephjerryrhule/imgpressor/master/scripts/install.sh | bash
-
-# Manual deployment with auto-deploy script
-curl -sSL https://raw.githubusercontent.com/josephjerryrhule/imgpressor/master/scripts/auto-deploy.sh | bash
-```
-
-#### Option 2: Build and Deploy Manually
-```bash
-# Build complete deployment package
+# Or build manually
 npm run build:traditional
-
-# The dist/ folder contains everything needed for deployment
 cd dist && npm start
 ```
 
-#### Option 3: Cloudflare Pages (Global CDN)
-```bash
-# Build for Cloudflare Pages
-npm run build:pages
+### WordPress Plugin
 
-# Deploy (with Wrangler CLI)
-npm run deploy:pages
+See [WP-PLUGIN-BUILD.md](./WP-PLUGIN-BUILD.md) for complete WordPress plugin documentation.
+
+```bash
+# Build WordPress plugin
+npm run build:wp:release
+
+# Install the generated .zip file via WordPress admin
 ```
 
-For detailed deployment instructions, see [CLOUDFLARE-DEPLOYMENT.md](./CLOUDFLARE-DEPLOYMENT.md)
+### License Server
+
+```bash
+cd license-server
+npm install
+npm start
+```
 
 ## 📁 Project Structure
 
 ```
 imgpressor/
-├── public/           # Static files and frontend
-├── temp/            # Temporary upload storage
-├── app.js           # Main server application
-├── cleanup.sh       # Cleanup utilities
-└── enhanced-deploy.sh # Production deployment
+├── app.js                 # Main web app server
+├── public/                # Web app frontend
+├── wp-imgpressor/         # WordPress plugin source
+├── license-server/        # License management system
+├── scripts/               # Build and deployment scripts
+└── README.md             # This file
 ```
 
 ## 🔧 Configuration
 
-Environment variables can be set in `.env`:
-
+### Web App (.env)
 ```env
 NODE_ENV=production
+PORT=3001
+MAX_FILE_SIZE=100MB
+```
+
+### License Server (license-server/.env)
+```env
 PORT=3000
-CLEANUP_INTERVAL=30
-MAX_FILE_SIZE=10MB
+DATABASE_HOST=localhost
+DATABASE_NAME=imgpressor_licenses
+JWT_SECRET=your-secret-key
 ```
 
 ## 📈 API Endpoints
 
-- `GET /` - Main application interface
-- `POST /process` - Image compression endpoint
-- `GET /health` - Server health check
-- `GET /storage-status` - Storage monitoring
-- `GET /download-all/:sessionId` - Download ZIP archive
+### Web App
+- `POST /process` - Image compression
+- `GET /health` - Health check
+- `GET /download-all/:sessionId` - Download processed images
 
-## 🛠️ Technologies
+### License Server
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/license/create` - Create license
+- `GET /api/license/list` - List user licenses
 
-- **Backend**: Node.js, Express.js
-- **Image Processing**: Sharp (high-performance image processing)
-- **Frontend**: HTML5, TailwindCSS, Vanilla JavaScript
-- **File Handling**: Multer for multipart/form-data
-- **Compression**: Built-in gzip/deflate middleware
+## 🛠️ Technology Stack
+
+### Web Application
+- **Backend**: Node.js + Express.js
+- **Image Processing**: Sharp (libvips-based, 10-30x faster)
+- **Frontend**: TailwindCSS + Vanilla JavaScript
+- **Deployment**: PM2 for process management
+
+### WordPress Plugin
+- **Language**: PHP 7.4+
+- **Image Processing**: GD or Imagick (native PHP libraries)
+- **Features**: Auto-compression, lazy loading, CDN support
+- **Updates**: GitHub-based automatic updates
+
+### License Server
+- **Backend**: Node.js + Express.js
+- **Database**: PostgreSQL
+- **Authentication**: JWT tokens
+- **Admin UI**: Custom dashboard
+
+## 📚 Documentation
+
+- **WordPress Plugin**: [WP-PLUGIN-BUILD.md](./WP-PLUGIN-BUILD.md)
+- **Release System**: [RELEASE-SYSTEM.md](./RELEASE-SYSTEM.md)
+- **Installation**: See Quick Start section above
 
 ## 🌐 Live Demo
 
-Visit: [https://pressor.themewire.co](https://pressor.themewire.co)
+- **Web App**: [https://pressor.themewire.co](https://pressor.themewire.co)
+- **License Portal**: [http://localhost:3000](http://localhost:3000) (local)
 
 ## 📄 License
 
-MIT License - see LICENSE file for details.
+MIT License - Free for personal and commercial use.
