@@ -104,15 +104,198 @@ DATABASE_NAME=imgpressor_licenses
 JWT_SECRET=your-secret-key
 ```
 
-## 📈 API Endpoints
+## 📈 API Documentation
 
-### Web App
+### Base URL
 
-- `POST /process` - Image compression
-- `GET /health` - Health check
-- `GET /download-all/:sessionId` - Download processed images
+**Production:** `https://imgpressor.themewire.co`  
+**Development:** `http://localhost:3001`
 
-### License Server
+### Upload Image Endpoint
+
+**Endpoint:** `POST /api/upload`
+
+Upload an image file or provide a URL to process. Returns image metadata with an optimized thumbnail preview and a sessionId for subsequent conversion operations.
+
+**Method 1: File Upload**
+
+```bash
+curl -X POST https://imgpressor.themewire.co/api/upload \
+  -F "image=@/path/to/your/image.jpg"
+```
+
+**Method 2: URL Upload**
+
+```bash
+curl -X POST https://imgpressor.themewire.co/api/upload \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"}'
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "image": {
+    "filename": "example.jpg",
+    "originalFormat": "jpeg",
+    "width": 4000,
+    "height": 3000,
+    "size": 2457600,
+    "sizeKB": "2400.00",
+    "hasAlpha": false,
+    "orientation": 1,
+    "preview": "data:image/webp;base64,UklGRk...",
+    "previewSize": 89234,
+    "previewSizeKB": "87.14"
+  },
+  "conversionOptions": {
+    "formats": ["webp", "avif", "jpeg", "png"],
+    "qualityRange": {
+      "min": 10,
+      "max": 100,
+      "default": 80
+    }
+  },
+  "sessionId": "c22b964c5a7ac49932f387cfa9505c6f"
+}
+```
+
+**Key Features:**
+- Preview is a thumbnail (max 800px width, WebP format, 85% quality)
+- Typically 80-90% smaller than full base64
+- Session expires in 10 minutes
+- Supported formats: JPEG, PNG, WebP, AVIF, GIF, TIFF, SVG
+
+### Convert Image Endpoint
+
+**Endpoint:** `POST /api/convert`
+
+Convert a previously uploaded image to a specified format with custom quality settings. Returns the full converted image as base64 along with compression statistics and a download URL.
+
+```bash
+curl -X POST https://imgpressor.themewire.co/api/convert \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sessionId": "c22b964c5a7ac49932f387cfa9505c6f",
+    "format": "webp",
+    "quality": 80
+  }'
+```
+
+**Request Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `sessionId` | string | Yes | Session ID from `/api/upload` response |
+| `format` | string | Yes | Output format: `webp`, `avif`, `jpeg`, `png` |
+| `quality` | number | No | Quality level 10-100 (default: 80) |
+
+**Response:**
+```json
+{
+  "success": true,
+  "format": "webp",
+  "quality": 80,
+  "preview": "data:image/webp;base64,UklGRk5KAAB...",
+  "originalSize": 2457600,
+  "convertedSize": 751234,
+  "savedBytes": 1706366,
+  "savedPercentage": "69.43",
+  "originalFilename": "example.jpg",
+  "downloadFilename": "example_webp.webp",
+  "downloadUrl": "/api/download/c22b964c5a7ac49932f387cfa9505c6f?format=webp"
+}
+```
+
+**Format Characteristics:**
+
+| Format | Quality Range | Typical Savings | Alpha Support | Best For |
+|--------|---------------|-----------------|---------------|----------|
+| **WebP** | 1-100 | 60-75% | Yes | General web use, broad compatibility |
+| **AVIF** | 1-100 | 70-80% | Yes | Maximum compression, modern browsers |
+| **JPEG** | 1-100 | 40-60% | No | Photos, legacy compatibility |
+| **PNG** | N/A (lossless) | Varies | Yes | Graphics with transparency, lossless |
+
+**Important Notes:**
+- The `preview` field contains the **full converted image** (not a thumbnail)
+- Converted images are cached for 10 minutes
+- PNG quality parameter is ignored (lossless format)
+
+### Download Converted Image
+
+**Endpoint:** `GET /api/download/:sessionId`
+
+Download the converted image as a binary file instead of base64.
+
+```bash
+curl -X GET "https://imgpressor.themewire.co/api/download/c22b964c5a7ac49932f387cfa9505c6f?format=webp" \
+  --output downloaded-image.webp
+```
+
+**Response:**
+- Binary image file
+- Content-Type: `image/webp` (or jpeg, png, avif)
+- Content-Disposition with filename
+- Cache-Control: `public, max-age=3600`
+
+### Health Check
+
+**Endpoint:** `GET /health`
+
+```bash
+curl https://imgpressor.themewire.co/health
+```
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-12-03T10:20:00.000Z",
+  "uptime": 3600,
+  "memory": {
+    "rss": 125829120,
+    "heapTotal": 67108864,
+    "heapUsed": 45678901,
+    "external": 2345678
+  },
+  "sharp": "0.32.4"
+}
+```
+
+### Complete Workflow Example
+
+```bash
+# 1. Upload Image
+curl -X POST https://imgpressor.themewire.co/api/upload \
+  -F "image=@photo.jpg"
+
+# Response includes sessionId: "abc123..."
+
+# 2. Convert to WebP
+curl -X POST https://imgpressor.themewire.co/api/convert \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sessionId": "abc123...",
+    "format": "webp",
+    "quality": 85
+  }'
+
+# Response includes base64 preview and downloadUrl
+
+# 3. Download Binary File (Optional)
+curl -X GET "https://imgpressor.themewire.co/api/download/abc123...?format=webp" \
+  --output optimized-photo.webp
+```
+
+### Rate Limits & Constraints
+
+- **File Size Limit:** Depends on server configuration (default: no explicit limit)
+- **Session TTL:** 10 minutes for both original and converted images
+- **Concurrent Requests:** No explicit limit, but memory-intensive operations
+- **URL Download Timeout:** 30 seconds
+
+### License Server API
 
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
