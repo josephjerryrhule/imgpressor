@@ -940,8 +940,16 @@ app.post("/api/upload", optionalUpload, async (req, res) => {
     // Get image metadata using Sharp
     const metadata = await sharp(buffer).metadata();
 
-    // Generate base64 preview of original
-    const originalBase64 = buffer.toString("base64");
+    // Generate optimized thumbnail preview (max 800px width, WebP format for smaller size)
+    const thumbnailBuffer = await sharp(buffer)
+      .resize(800, null, { 
+        withoutEnlargement: true, // Don't upscale small images
+        fit: 'inside'
+      })
+      .webp({ quality: 85 }) // WebP is much smaller than original format
+      .toBuffer();
+
+    const thumbnailBase64 = thumbnailBuffer.toString("base64");
     const originalMimeType = `image/${metadata.format}`;
 
     // Prepare response with metadata and conversion options
@@ -956,7 +964,11 @@ app.post("/api/upload", optionalUpload, async (req, res) => {
         sizeKB: (buffer.length / 1024).toFixed(2),
         hasAlpha: metadata.hasAlpha,
         orientation: metadata.orientation,
-        preview: `data:${originalMimeType};base64,${originalBase64}`,
+        // Return optimized WebP thumbnail instead of full-size original
+        // This is typically 80-90% smaller than full base64
+        preview: `data:image/webp;base64,${thumbnailBase64}`,
+        previewSize: thumbnailBuffer.length,
+        previewSizeKB: (thumbnailBuffer.length / 1024).toFixed(2),
       },
       conversionOptions: {
         formats: ["webp", "avif", "jpeg", "png"],
@@ -1062,24 +1074,91 @@ app.post("/api/convert", async (req, res) => {
     const savedBytes = originalSize - optimizedSize;
     const savedPercentage = ((savedBytes / originalSize) * 100).toFixed(2);
 
-    // Create base64 for preview
+    // Return full converted file as base64 (this is the actual result needed for other platforms)
     const base64Data = optimizedBuffer.toString("base64");
     const mimeType = `image/${processed.format}`;
+    const downloadFilename = `${filename.split(".")[0]}_${processed.format}.${processed.format}`;
+
+    // Store converted buffer for direct download endpoint
+    global.imageCache.set(`${sessionId}_converted`, {
+      buffer: optimizedBuffer,
+      filename: downloadFilename,
+      format: format,
+      uploadedAt: Date.now(),
+    });
+
+    // Auto-cleanup after 10 minutes
+    setTimeout(() => {
+      global.imageCache.delete(`${sessionId}_converted`);
+    }, 600000);
 
     res.json({
       success: true,
       format: processed.format,
       quality: quality,
+      // Full converted file (needed for fetching on other platforms)
       preview: `data:${mimeType};base64,${base64Data}`,
       originalSize: originalSize,
       convertedSize: optimizedSize,
       savedBytes: savedBytes,
       savedPercentage: savedPercentage,
       originalFilename: filename,
-      downloadFilename: `${filename.split(".")[0]}_${processed.format}.${processed.format}`,
+      downloadFilename: downloadFilename,
+      // Direct download URL for binary file
+      downloadUrl: `/api/download/${sessionId}?format=${format}`,
     });
   } catch (error) {
     console.error("Convert error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/download/:sessionId
+ * Download the converted image as a binary file
+ * 
+ * Usage:
+ * <a href="/api/download/abc123?format=webp" download>Download Image</a>
+ * 
+ * Or fetch programmatically:
+ * fetch('/api/download/abc123?format=webp')
+ *   .then(res => res.blob())
+ *   .then(blob => {
+ *     const url = URL.createObjectURL(blob);
+ *     const a = document.createElement('a');
+ *     a.href = url;
+ *     a.download = 'compressed.webp';
+ *     a.click();
+ *   });
+ */
+app.get("/api/download/:sessionId", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const format = req.query.format || "webp";
+
+    if (!global.imageCache || !global.imageCache.has(`${sessionId}_converted`)) {
+      return res.status(404).json({
+        success: false,
+        error: "Converted image not found or expired. Please convert again.",
+      });
+    }
+
+    const cached = global.imageCache.get(`${sessionId}_converted`);
+    const buffer = cached.buffer;
+    const filename = cached.filename || `converted.${format}`;
+
+    // Set headers for file download
+    res.setHeader("Content-Type", `image/${format}`);
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Length", buffer.length);
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    
+    res.send(buffer);
+  } catch (error) {
+    console.error("Download error:", error);
     res.status(500).json({
       success: false,
       error: error.message,
@@ -1097,6 +1176,9 @@ app.use((req, res, next) => {
         <ul>
             <li>GET / - Main page</li>
             <li>POST /process - Image processing</li>
+            <li>POST /api/upload - Upload image</li>
+            <li>POST /api/convert - Convert image</li>
+            <li>GET /api/download/:sessionId - Download converted image</li>
             <li>GET /health - Health check</li>
             <li>GET /test - Server test</li>
             <li>GET /download-all/:sessionId - Download all files</li>
