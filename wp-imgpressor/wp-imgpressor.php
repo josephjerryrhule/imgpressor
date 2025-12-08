@@ -3,7 +3,7 @@
  * Plugin Name: WP ImgPressor
  * Plugin URI: https://github.com/josephjerryrhule/imgpressor
  * Description: Automatically compress and convert uploaded images to WebP or AVIF format using PHP's native GD or Imagick libraries. Zero dependencies - works out-of-the-box! Now with faster compression and automatic format detection.
- * Version: 5.0.3
+ * Version: 5.0.4
  * Author: Joseph Jerry Rhule
  * Author URI: https://github.com/josephjerryrhule
  * License: MIT
@@ -19,7 +19,7 @@ if (!defined('WPINC')) {
 }
 
 // Define plugin constants
-define('WP_IMGPRESSOR_VERSION', '5.0.3');
+define('WP_IMGPRESSOR_VERSION', '5.0.4');
 define('WP_IMGPRESSOR_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WP_IMGPRESSOR_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('WP_IMGPRESSOR_PLUGIN_BASENAME', plugin_basename(__FILE__));
