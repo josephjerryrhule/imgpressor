@@ -42,16 +42,3 @@ img.lazy-skeleton.wp-imgpressor-lazy {
     background-color: #505050;
   }
 }
-
-/* Background Image Lazy Loading */
-.wp-imgpressor-bg-lazy {
-  background-image: none !important;
-  background-color: #e0e0e0;
-  animation: wp-imgpressor-skeleton 1.5s ease-in-out infinite;
-  position: relative;
-}
-
-.wp-imgpressor-bg-lazy.wp-imgpressor-loaded {
-  animation: none;
-  background-color: transparent;
-}
